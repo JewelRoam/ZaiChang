@@ -26,20 +26,21 @@ struct SceneStageView: View {
         ZStack {
             SceneNativeRenderer(model: model)
 
-            VStack(alignment: .leading, spacing: 7) {
+            VStack(alignment: .leading, spacing: 9) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(model.selectedScene.eyebrow)
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(Palette.amberSoft)
                         .textCase(.uppercase)
                     Text(model.selectedScene.headline)
-                        .font(.system(size: layout == .compact ? 22 : 26, weight: .semibold))
+                        .font(.system(size: layout == .compact ? 21 : 25, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: layout == .compact ? 255 : nil, alignment: .leading)
                     if let room = model.currentDeskRoom {
                         Text(room.code)
-                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(Palette.muted)
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.62))
+                            .padding(.leading, 2)
                     }
                 }
 
@@ -48,13 +49,19 @@ struct SceneStageView: View {
                         endFocusConfirmationPresented = true
                     } label: {
                         Label("结束专注", systemImage: "stop.fill")
-                            .font(.system(size: 13, weight: .bold))
-                            .padding(.horizontal, 15)
-                            .frame(minHeight: 42)
+                            .font(.system(size: 11, weight: .semibold))
+                            .padding(.horizontal, 10)
+                            .frame(minHeight: 32)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Palette.amber)
-                    .foregroundStyle(Color.black)
+                    .buttonStyle(ZaichangPlainButtonStyle())
+                    .foregroundStyle(.white)
+                    .background(.black.opacity(0.28))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(.white.opacity(0.58), lineWidth: 1)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .adaptiveHitTarget(minHeight: 32)
                     .accessibilityLabel("结束专注")
                 }
             }

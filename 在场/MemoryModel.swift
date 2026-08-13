@@ -211,6 +211,17 @@ final class MemoryController: ObservableObject {
     }
     deinit { task?.cancel() }
 
+    /// Clears all drafts and cards in memory and cancels any in-flight generation.
+    /// The persisted store file is removed by the app-wide data reset.
+    func resetAll() {
+        task?.cancel()
+        task = nil
+        pendingVoiceNoteID = nil
+        drafts = []
+        cards = []
+        generationState = .idle
+    }
+
     func makeDraft(
         title: String,
         mood: MemoryMood,

@@ -222,6 +222,13 @@ final class VoiceRecorderController: NSObject, ObservableObject {
         }
     }
 
+    /// Stops any in-flight recording/playback and clears saved notes in memory.
+    /// On-disk recordings are removed by the app-wide data reset.
+    func resetAll() {
+        cancelCurrentRecording()
+        savedNotes = []
+    }
+
     private var applicationDirectory: URL {
         AppStoragePaths.applicationSupportRoot()
     }

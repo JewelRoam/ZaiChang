@@ -8,6 +8,7 @@ struct SettingsSheet: View {
     enum Category: String, CaseIterable, Identifiable {
         case api = "API 设置"
         case ownPet = "我的桌宠"
+        case reset = "重置数据"
         var id: String { rawValue }
     }
 
@@ -16,6 +17,8 @@ struct SettingsSheet: View {
     @State private var saveError: String?
     @State private var didSave = false
     @State private var ownPetPhotoItem: PhotosPickerItem?
+    @State private var resetConfirmationPresented = false
+    @State private var didReset = false
     @FocusState private var focusSink: Bool
 
     var body: some View {
@@ -30,6 +33,7 @@ struct SettingsSheet: View {
                 switch category {
                 case .api: apiSettings
                 case .ownPet: ownPetSettings
+                case .reset: resetSettings
                 }
             }
         }
@@ -81,6 +85,70 @@ struct SettingsSheet: View {
             .padding(.bottom, 12)
         }
         .frame(height: 480)
+    }
+
+    private var resetSettings: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                section(title: "重置 APP 数据", subtitle: "清空所有本地持久化数据，恢复到初始状态") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label {
+                            Text("将删除以下内容，且不可恢复：")
+                                .font(.system(size: 11, weight: .semibold))
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(Palette.amber)
+                        }
+                        VStack(alignment: .leading, spacing: 4) {
+                            resetItem("留声与记忆")
+                            resetItem("生成的场景与背景图")
+                            resetItem("好友桌宠与我的桌宠形象")
+                            resetItem("其他本地缓存与偏好")
+                        }
+                        Text("API 设置会被保留，不会清除。")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Palette.muted)
+
+                        Button(role: .destructive) {
+                            resetConfirmationPresented = true
+                        } label: {
+                            Label("重置 APP 数据", systemImage: "trash")
+                                .font(.system(size: 12, weight: .semibold))
+                                .adaptiveFullWidthHitTarget(minHeight: 38)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color(red: 0.82, green: 0.32, blue: 0.28))
+                        .padding(.top, 4)
+
+                        if didReset {
+                            Label("已重置全部数据", systemImage: "checkmark.circle.fill")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Palette.amberSoft)
+                        }
+                    }
+                }
+            }
+            .padding(.bottom, 12)
+        }
+        .frame(height: 480)
+        .confirmationDialog(
+            "确定要重置全部数据吗？",
+            isPresented: $resetConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button("清空全部数据", role: .destructive, action: performReset)
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("此操作会删除全部本地持久化数据，且无法恢复。界面会立即恢复到初始状态。")
+        }
+    }
+
+    private func resetItem(_ text: String) -> some View {
+        Label(text, systemImage: "circle.fill")
+            .labelStyle(.titleAndIcon)
+            .font(.system(size: 10))
+            .foregroundStyle(Palette.muted)
+            .imageScale(.small)
     }
 
     private var textModelSection: some View {
@@ -200,6 +268,13 @@ struct SettingsSheet: View {
             didSave = false
             saveError = "保存失败：\(error.localizedDescription)"
         }
+    }
+
+    private func performReset() {
+        model.resetAllData()
+        saveError = nil
+        didSave = false
+        withAnimation { didReset = true }
     }
 }
 

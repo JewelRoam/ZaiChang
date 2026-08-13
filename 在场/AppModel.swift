@@ -226,12 +226,14 @@ final class AppModel: ObservableObject {
     @Published private(set) var activeSuggestion: PresenceSuggestion?
     @Published private(set) var activeFocusSession: FocusSession?
     @Published private(set) var lastActivityEndedEvent: ActivityEndedEvent?
-    @Published var tasks = [
+    @Published var tasks = AppModel.defaultTasks
+    @Published private(set) var dailyTodoCompletedAt: Date?
+
+    static let defaultTasks = [
         FocusTask(title: "整理首页文案", isCompleted: true),
         FocusTask(title: "补齐方案最后两页", isCompleted: false),
         FocusTask(title: "给阿禾回一段留声", isCompleted: false),
     ]
-    @Published private(set) var dailyTodoCompletedAt: Date?
 
     let voiceRecorder: VoiceRecorderController
     let memory: MemoryController
@@ -471,6 +473,31 @@ final class AppModel: ObservableObject {
         guard !audioActivated else { return }
         audioActivated = true
         ambientAudio.start(preset: selectedScene.ambientPreset, enabled: ambientEnabled)
+    }
+
+    /// Clears every persisted artifact and resets in-memory state to launch
+    /// defaults, so the UI updates immediately without relaunching the app.
+    func resetAllData() {
+        // Cancel in-flight work and clear controller state before wiping files,
+        // so nothing re-persists stale data on the way down.
+        deskPet.clear()
+        ownDeskPet.reset()
+        memory.resetAll()
+        voiceRecorder.resetAll()
+
+        // Reset the persisted session state that lives on AppModel.
+        scenes = RoomSceneCatalog.builtIn
+        selectedSceneID = RoomSceneCatalog.focusScene.id
+        tasks = Self.defaultTasks
+        dailyTodoCompletedAt = nil
+
+        // Finally remove any remaining on-disk data plus app-owned defaults.
+        AppStoragePaths.resetAllData()
+
+        if audioActivated {
+            ambientAudio.setPreset(selectedScene.ambientPreset)
+        }
+        showToast("已重置全部数据")
     }
 
     func deactivateAudio() {

@@ -45,7 +45,7 @@ struct SidebarView: View {
     var body: some View {
         VStack(spacing: 6) {
             SidebarButton(symbol: "house", title: "在场", isActive: true) {}
-            SidebarButton(symbol: "person.2", title: "当前房间") { model.activeSheet = .desk }
+            SidebarButton(symbol: "person.2", title: "同桌") { model.activeSheet = .desk }
             SidebarButton(symbol: "record.circle", title: "留声") { model.activeSheet = .voice }
             SidebarButton(symbol: "book.closed", title: "记忆") { model.activeSheet = .memory }
             Spacer()

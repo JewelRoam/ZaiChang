@@ -26,47 +26,49 @@ struct SceneStageView: View {
         ZStack {
             SceneNativeRenderer(model: model)
 
-            VStack(alignment: .leading, spacing: 7) {
-                Text(model.selectedScene.eyebrow)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Palette.amberSoft)
-                    .textCase(.uppercase)
-                Text(model.selectedScene.headline)
-                    .font(.system(size: layout == .compact ? 22 : 26, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: layout == .compact ? 255 : nil, alignment: .leading)
-            }
-            .shadow(color: .black.opacity(0.55), radius: 8, y: 2)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(.top, 30)
-            .padding(.leading, 28)
-            .allowsHitTesting(false)
+            VStack(alignment: .leading, spacing: 9) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Text(model.selectedScene.eyebrow)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Palette.amberSoft)
+                        .textCase(.uppercase)
+                    Text(model.selectedScene.headline)
+                        .font(.system(size: layout == .compact ? 21 : 25, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: layout == .compact ? 255 : nil, alignment: .leading)
+                    if let room = model.currentDeskRoom {
+                        Text(room.code)
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.62))
+                            .padding(.leading, 2)
+                    }
+                }
 
-            if let task = model.activeFocusTask {
-                HStack(spacing: 10) {
-                    Label(task.title, systemImage: "checklist")
-                        .font(.system(size: 13, weight: .semibold))
-                        .lineLimit(2)
-
+                if model.activeFocusSession != nil {
                     Button {
                         endFocusConfirmationPresented = true
                     } label: {
                         Label("结束专注", systemImage: "stop.fill")
                             .font(.system(size: 13, weight: .semibold))
-                            .adaptiveHitTarget(minHeight: 32)
+                            .padding(.horizontal, 10)
+                            .frame(minHeight: 32)
                     }
                     .buttonStyle(ZaichangPlainButtonStyle())
+                    .foregroundStyle(.white)
+                    .background(.black.opacity(0.28))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(.white.opacity(0.58), lineWidth: 1)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .adaptiveHitTarget(minHeight: 32)
+                    .accessibilityLabel("结束专注")
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(.black.opacity(0.66))
-                .overlay(RoundedRectangle(cornerRadius: 7).stroke(.white.opacity(0.16)))
-                .clipShape(RoundedRectangle(cornerRadius: 7))
-                .frame(maxWidth: layout == .compact ? 310 : 420, alignment: .leading)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .padding(.top, layout == .compact ? 104 : 102)
-                .padding(.leading, 28)
             }
+            .shadow(color: .black.opacity(0.55), radius: 8, y: 2)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.top, 30)
+            .padding(.leading, 28)
 
             if let partner = model.currentDeskPartner {
                 Button {
@@ -152,10 +154,13 @@ struct SceneStageView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
 
-            if let profile = deskPet.activeProfile, !deskPet.isFloating {
-                DeskPetOverlay(controller: deskPet, profile: profile) {
-                    model.nudgeDeskMate()
-                }
+            if !deskPet.isFloating {
+                DeskPetPairOverlay(
+                    controller: deskPet,
+                    partnerProfile: deskPet.activePartnerProfile,
+                    partnerName: model.currentDeskPartner?.name,
+                    onPartnerDoubleTap: { model.nudgeDeskMate() }
+                )
                     .padding(.trailing, layout == .compact ? 14 : 22)
                     .padding(.bottom, 84 + bottomInset)
                     .transition(.scale.combined(with: .opacity))

@@ -115,15 +115,15 @@ struct AppModelTests {
         try await Task.sleep(for: .milliseconds(20))
 
         #expect(controller.state == .ready)
-        #expect(controller.profile?.partnerName == "阿禾")
+        #expect(controller.partnerProfile?.partnerName == "阿禾")
         #expect(controller.activeProfile == nil)
 
-        controller.setEnabled(true)
-        #expect(controller.activeProfile?.partnerID == DeskPartner.ahe.id)
+        controller.setActivePartner(.ahe)
+        #expect(controller.activePartnerProfile?.partnerID == DeskPartner.ahe.id)
 
         controller.clear()
         #expect(controller.state == .idle)
-        #expect(controller.activeProfile == nil)
+        #expect(controller.activePartnerProfile == nil)
     }
 
     @Test("桌宠生成结果会持久化并在下次启动恢复")
@@ -141,15 +141,15 @@ struct AppModelTests {
         controller.selectPhoto(Data([0x01]), for: .ahe)
         controller.generate()
         try await Task.sleep(for: .milliseconds(20))
-        controller.setEnabled(true)
+        controller.setActivePartner(.ahe)
 
         let restored = DeskPetController(
             generator: ImmediateDeskPetGenerator(),
             persistence: persistence
         )
-        #expect(restored.profile?.partnerID == DeskPartner.ahe.id)
-        #expect(restored.profile?.generatedImageData == generatedData)
-        #expect(restored.profile?.isEnabled == true)
+        #expect(restored.partnerProfile?.partnerID == DeskPartner.ahe.id)
+        #expect(restored.partnerProfile?.generatedImageData == generatedData)
+        #expect(restored.partnerProfile?.isEnabled == true)
 
         restored.clear()
         #expect(persistence.load() == nil)
@@ -163,7 +163,7 @@ struct AppModelTests {
         controller.selectPhoto(Data([0x01, 0x02]), for: .ahe)
         controller.generate()
         try await Task.sleep(for: .milliseconds(20))
-        controller.setEnabled(true)
+        controller.setActivePartner(.ahe)
 
         let window = NSWindow(
             contentRect: NSRect(x: 100, y: 100, width: 1_200, height: 760),
@@ -282,8 +282,8 @@ struct AppModelTests {
         let added = model.addTask(title: "  写完演示说明  ")
 
         #expect(added)
-        #expect(model.tasks.last?.title == "写完演示说明")
-        #expect(model.tasks.last?.isCompleted == false)
+        #expect(model.tasks.first?.title == "写完演示说明")
+        #expect(model.tasks.first?.isCompleted == false)
     }
 
     @Test("桌上事项拒绝重复内容并限制为五项")

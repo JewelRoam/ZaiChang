@@ -47,6 +47,15 @@ final class AmbientAudioEngine: ObservableObject, AmbientAudioControlling {
     func start(preset: AmbientPreset, enabled: Bool) {
         currentPreset = preset
         isEnabled = enabled
+
+        // Ambient audio is opt-in. Do not construct or start AVAudioEngine
+        // while it is disabled; this keeps app launch silent and avoids
+        // asking macOS's sandboxed audio services for an output session.
+        guard enabled else {
+            stop()
+            return
+        }
+
         configureIfNeeded()
         guard lastError == nil else { return }
 
@@ -84,6 +93,14 @@ final class AmbientAudioEngine: ObservableObject, AmbientAudioControlling {
     func setEnabled(_ enabled: Bool) {
         guard enabled != isEnabled else { return }
         isEnabled = enabled
+
+        if enabled {
+            // A disabled engine is intentionally torn down at launch. Start
+            // it lazily when the user explicitly enables ambient audio.
+            start(preset: currentPreset, enabled: true)
+            return
+        }
+
         fadeMaster(to: targetMasterVolume, duration: enabled ? 0.8 : 0.45)
     }
 

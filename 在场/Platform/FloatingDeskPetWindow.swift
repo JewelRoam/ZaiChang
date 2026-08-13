@@ -40,7 +40,13 @@ final class HostingWindowProbe: NSView {
     func reportWindowIfNeeded() {
         guard reportedWindow !== window else { return }
         reportedWindow = window
-        onWindowChange(window)
+        // `updateNSView` can run while SwiftUI is evaluating `body`. Defer
+        // the AppKit binding so `attach` may publish state outside that pass.
+        let callback = onWindowChange
+        let currentWindow = window
+        DispatchQueue.main.async {
+            callback(currentWindow)
+        }
     }
 }
 
@@ -118,7 +124,7 @@ final class FloatingDeskPetWindow: NSObject {
         profileObservation?.cancel()
         self.controller?.isFloating = false
         self.controller = controller
-        profileObservation = controller.$profile
+        profileObservation = controller.$partnerProfile
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 Task { @MainActor [weak self] in
@@ -170,7 +176,7 @@ final class FloatingDeskPetWindow: NSObject {
             return
         }
 
-        guard controller.activeProfile != nil else {
+        guard controller.activePartnerProfile != nil else {
             dismissPanel()
             return
         }
@@ -189,7 +195,7 @@ final class FloatingDeskPetWindow: NSObject {
     private func showFloatingPet() {
         guard
             let controller,
-            let profile = controller.activeProfile,
+            let profile = controller.activePartnerProfile,
             let screen = mainWindow?.screen ?? NSScreen.main
         else { return }
 
@@ -418,12 +424,15 @@ final class FloatingDeskPetWindow: NSObject {
     // MARK: - Geometry
 
     private func petSizeFromMainWindow() -> CGFloat {
+        // 优先沿用场景内桌宠的实际尺寸，保证最小化前后大小一致
+        if let size = controller?.partnerPetSize { return size }
+
         guard let window = mainWindow else { return 136 }
         let sceneWidth = window.frame.width
             - LayoutMetrics.sidebarWidth
             - LayoutMetrics.contextPanelWidth
-        let size = min(sceneWidth, window.frame.height) * 0.22
-        return min(max(size, 80), 200)
+        let size = min(sceneWidth, window.frame.height) * 0.20
+        return min(max(size, 76), 176)
     }
 
     private func petScreenPosition(petSize: CGFloat) -> NSPoint {
@@ -435,7 +444,7 @@ final class FloatingDeskPetWindow: NSObject {
         let half = petSize / 2
 
         // 如果用户在场景内拖拽过桌宠，用拖拽后的位置映射到屏幕坐标
-        if let pos = controller?.scenePosition {
+        if let pos = controller?.partnerScenePosition {
             // pos 为场景本地坐标（左上角原点，y 向下）下的桌宠中心
             let sceneLeft = window.frame.minX + LayoutMetrics.sidebarWidth
             let centerX = sceneLeft + pos.x

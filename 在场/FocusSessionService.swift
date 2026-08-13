@@ -4,16 +4,57 @@ struct FocusSessionConfiguration: Equatable {
     static let allowedDurations = [15, 25, 45, 60]
 
     let durationMinutes: Int
-    let taskID: FocusTask.ID
+    let taskIDs: [FocusTask.ID]
+    let customTaskTitle: String?
+    let sceneID: RoomScene.ID?
+
+    init(durationMinutes: Int, taskID: FocusTask.ID) {
+        self.init(durationMinutes: durationMinutes, taskIDs: [taskID])
+    }
+
+    init(
+        durationMinutes: Int,
+        taskIDs: [FocusTask.ID] = [],
+        customTaskTitle: String? = nil,
+        sceneID: RoomScene.ID? = nil
+    ) {
+        self.durationMinutes = durationMinutes
+        self.taskIDs = taskIDs
+        self.customTaskTitle = customTaskTitle
+        self.sceneID = sceneID
+    }
+
+    var taskID: FocusTask.ID? { taskIDs.first }
 }
 
 struct FocusSession: Equatable, Identifiable {
     let id: UUID
     let roomID: DeskRoom.ID
-    let taskID: FocusTask.ID
+    let taskIDs: [FocusTask.ID]
+    let customTaskTitle: String?
     let durationSeconds: Int
     let sceneID: RoomScene.ID
     let startedAt: Date
+
+    init(
+        id: UUID,
+        roomID: DeskRoom.ID,
+        taskIDs: [FocusTask.ID],
+        customTaskTitle: String?,
+        durationSeconds: Int,
+        sceneID: RoomScene.ID,
+        startedAt: Date
+    ) {
+        self.id = id
+        self.roomID = roomID
+        self.taskIDs = taskIDs
+        self.customTaskTitle = customTaskTitle
+        self.durationSeconds = durationSeconds
+        self.sceneID = sceneID
+        self.startedAt = startedAt
+    }
+
+    var taskID: FocusTask.ID? { taskIDs.first }
 }
 
 enum ActivityEndReason: Equatable {
@@ -61,14 +102,17 @@ struct MockFocusSessionService: FocusSessionServicing {
         guard !candidateScenes.isEmpty else {
             throw FocusSessionServiceError.noScenes
         }
-        guard let scene = sceneSelector(candidateScenes) else {
+        guard let scene = configuration.sceneID.flatMap({ selectedID in
+            candidateScenes.first { $0.id == selectedID }
+        }) ?? sceneSelector(candidateScenes) else {
             throw FocusSessionServiceError.noScenes
         }
 
         return FocusSession(
             id: UUID(),
             roomID: roomID,
-            taskID: configuration.taskID,
+            taskIDs: configuration.taskIDs,
+            customTaskTitle: configuration.customTaskTitle,
             durationSeconds: configuration.durationMinutes * 60,
             sceneID: scene.id,
             startedAt: Date()

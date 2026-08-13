@@ -443,13 +443,16 @@ enum DeskPetError: LocalizedError {
 @MainActor
 final class DeskPetController: ObservableObject {
     @Published private(set) var state: DeskPetGenerationState = .idle
-    @Published private(set) var profile: DeskPetProfile?
+    @Published private(set) var partnerProfile: DeskPetProfile?
     @Published var isFloating: Bool = false
     @Published private(set) var nudgeFeedback: DeskPetNudgeFeedback?
-    /// 桌宠在场景内被拖拽到的位置（场景本地坐标）。为空时使用默认右下角。
-    @Published var scenePosition: CGPoint?
-    /// 当前正在同桌房间中的好友 ID。只有与桌宠归属的好友同桌时才显示桌宠。
-    @Published var activePartnerID: DeskPartner.ID?
+    /// The partner pet's center in scene-local coordinates. `nil` uses the default anchor.
+    @Published private(set) var partnerScenePosition: CGPoint?
+    /// Only a pet owned by the partner in the current room may enter the scene or desktop.
+    @Published private(set) var activePartnerID: DeskPartner.ID?
+    /// The partner pet's rendered size in the scene. The floating window reuses it so the
+    /// pet keeps the exact same size when the window is miniaturized.
+    @Published private(set) var partnerPetSize: CGFloat?
 
     private let generator: any DeskPetGenerating
     private let persistence: DeskPetPersistence
@@ -477,27 +480,56 @@ final class DeskPetController: ObservableObject {
         self.init(generator: HybridDeskPetGenerator())
     }
 
-    var activeProfile: DeskPetProfile? {
-        guard let profile, profile.isEnabled else { return nil }
-        // 只有当前正在与桌宠归属的好友同桌时才显示
-        guard profile.partnerID == activePartnerID else { return nil }
-        return profile
+    /// The generated profile belongs to the desk partner. It is the only
+    /// profile allowed to participate in nudge interactions or leave the app window.
+    var activePartnerProfile: DeskPetProfile? {
+        guard let partnerProfile, partnerProfile.isEnabled else { return nil }
+        guard partnerProfile.partnerID == activePartnerID else { return nil }
+        return partnerProfile
     }
+
+    /// Only the partner profile can detach from the app window.
+    var floatingProfile: DeskPetProfile? { activePartnerProfile }
+
+    @available(*, deprecated, renamed: "activePartnerProfile")
+    var profile: DeskPetProfile? { partnerProfile }
+
+    @available(*, deprecated, renamed: "activePartnerProfile")
+    var activeProfile: DeskPetProfile? { activePartnerProfile }
 
     var hasSelectedPhoto: Bool { pendingPhotoData != nil }
     var selectedPhotoData: Data? { pendingPhotoData }
+
+    func setActivePartner(_ partner: DeskPartner?) {
+        let nextID = partner?.id
+        guard activePartnerID != nextID else { return }
+        activePartnerID = nextID
+        if nextID == nil {
+            partnerScenePosition = nil
+            dismissNudgeFeedback()
+        }
+    }
+
+    func movePartnerPet(to position: CGPoint) {
+        partnerScenePosition = position
+    }
+
+    func updatePartnerPetSize(_ size: CGFloat) {
+        guard partnerPetSize != size else { return }
+        partnerPetSize = size
+    }
 
     func prepare(for partner: DeskPartner?) {
         guard let partner else {
             clear()
             return
         }
-        if profile?.partnerID == partner.id {
+        if partnerProfile?.partnerID == partner.id {
             pendingPartner = partner
             if state == .idle { state = .ready }
             return
         }
-        if pendingPartner?.id != partner.id || profile?.partnerID != partner.id {
+        if pendingPartner?.id != partner.id || partnerProfile?.partnerID != partner.id {
             clear()
         }
     }
@@ -507,7 +539,9 @@ final class DeskPetController: ObservableObject {
         try? persistence.remove()
         pendingPhotoData = data
         pendingPartner = partner
-        profile = nil
+        partnerProfile = nil
+        partnerScenePosition = nil
+        dismissNudgeFeedback()
         state = .photoSelected
     }
 
@@ -530,29 +564,25 @@ final class DeskPetController: ObservableObject {
                     partnerName: pendingPartner.name,
                     sourceImageData: pendingPhotoData,
                     generatedImageData: generated,
-                    isEnabled: false
+                    isEnabled: true
                 )
-                profile = generatedProfile
+                partnerProfile = generatedProfile
                 do {
                     try persistence.save(generatedProfile)
                 } catch {
                     state = .failed(DeskPetPersistenceError.saveFailed(error.localizedDescription).localizedDescription)
                     return
                 }
+                partnerProfile?.isEnabled = true
                 state = .ready
             } catch is CancellationError {
                 // Replacing a photo or leaving the room cancels the old job.
             } catch {
                 guard let self, !Task.isCancelled else { return }
                 state = .failed(error.localizedDescription)
+                dismissNudgeFeedback()
             }
         }
-    }
-
-    func setEnabled(_ enabled: Bool) {
-        guard profile != nil else { return }
-        profile?.isEnabled = enabled
-        persistCurrentProfile()
     }
 
     func presentNudgeFeedback(message: String, kind: DeskPetNudgeFeedbackKind) {
@@ -578,21 +608,22 @@ final class DeskPetController: ObservableObject {
         dismissNudgeFeedback()
         pendingPhotoData = nil
         pendingPartner = nil
-        profile = nil
+        partnerProfile = nil
+        partnerScenePosition = nil
         state = .idle
         try? persistence.remove()
     }
 
     private func restorePersistedProfile() {
         guard let restored = persistence.load() else { return }
-        profile = restored
+        partnerProfile = restored
         state = .ready
     }
 
     private func persistCurrentProfile() {
-        guard let profile else { return }
+        guard let partnerProfile else { return }
         do {
-            try persistence.save(profile)
+            try persistence.save(partnerProfile)
         } catch {
             state = .failed(DeskPetPersistenceError.saveFailed(error.localizedDescription).localizedDescription)
         }

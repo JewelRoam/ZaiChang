@@ -82,7 +82,7 @@ struct ContextPanelView: View {
                                 .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
                         }
 
-                        ForEach(model.tasks) { task in
+                        ForEach(model.orderedTasks) { task in
                             if editingTaskID == task.id {
                                 taskEditor(
                                     title: $editingTaskTitle,

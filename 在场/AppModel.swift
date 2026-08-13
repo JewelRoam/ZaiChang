@@ -218,7 +218,7 @@ final class AppModel: ObservableObject {
     @Published var activeSheet: AppSheet?
     @Published var toastMessage: String?
     @Published var deskSession: DeskSessionState = .disconnected {
-        didSet { deskPet.activePartnerID = currentDeskPartner?.id }
+        didSet { deskPet.setActivePartner(currentDeskPartner) }
     }
     @Published var deskErrorMessage: String?
     @Published private(set) var activeSuggestion: PresenceSuggestion?
@@ -293,6 +293,10 @@ final class AppModel: ObservableObject {
     var completedTaskCount: Int { tasks.filter(\.isCompleted).count }
     var canAddTask: Bool { tasks.count < Self.maximumTaskCount }
     var incompleteTasks: [FocusTask] { tasks.filter { !$0.isCompleted } }
+    var orderedTasks: [FocusTask] {
+        tasks.filter { !$0.isCompleted } + tasks.filter(\.isCompleted)
+    }
+    var shareableDeskCode: String { currentDeskRoom?.code ?? deskRoomService.demoInviteCode }
     private var allTasksCompleted: Bool { !tasks.isEmpty && tasks.allSatisfy(\.isCompleted) }
 
     var currentDeskRoom: DeskRoom? {
@@ -302,8 +306,18 @@ final class AppModel: ObservableObject {
 
     var currentDeskPartner: DeskPartner? { currentDeskRoom?.partner }
     var activeFocusTask: FocusTask? {
-        guard let taskID = activeFocusSession?.taskID else { return nil }
+        guard let taskID = activeFocusSession?.taskIDs.first else { return nil }
         return tasks.first { $0.id == taskID }
+    }
+
+    var activeFocusTasks: [FocusTask] {
+        guard let taskIDs = activeFocusSession?.taskIDs else { return [] }
+        return taskIDs.compactMap { taskID in tasks.first { $0.id == taskID } }
+    }
+
+    var activeFocusSummary: String? {
+        let titles = activeFocusTasks.map(\.title) + [activeFocusSession?.customTaskTitle].compactMap { $0 }
+        return titles.isEmpty ? nil : titles.joined(separator: " · ")
     }
     var deskActionTitle: String { currentDeskRoom == nil ? "加入同桌" : "邀请同桌" }
 
@@ -380,7 +394,7 @@ final class AppModel: ObservableObject {
             message: "\(partner.name)拍了拍你",
             kind: .received
         )
-        if deskPet.profile?.isEnabled != true {
+        if deskPet.partnerProfile?.isEnabled != true {
             showToast("\(partner.name)拍了拍你")
         }
     }
@@ -514,19 +528,33 @@ final class AppModel: ObservableObject {
 
     @discardableResult
     func beginDeskFocus(durationMinutes: Int, taskID: FocusTask.ID) -> Bool {
+        beginDeskFocus(durationMinutes: durationMinutes, taskIDs: [taskID], customTaskTitle: nil, sceneID: nil)
+    }
+
+    @discardableResult
+    func beginDeskFocus(
+        durationMinutes: Int,
+        taskIDs: Set<FocusTask.ID>,
+        customTaskTitle rawCustomTaskTitle: String?,
+        sceneID: RoomScene.ID?
+    ) -> Bool {
+        let selectableTaskIDs = Set(incompleteTasks.map(\.id))
         guard let room = currentDeskRoom,
-              let task = tasks.first(where: { $0.id == taskID && !$0.isCompleted }) else {
-            return false
-        }
+              taskIDs.isSubset(of: selectableTaskIDs),
+              sceneID.map({ selectedID in scenes.contains(where: { $0.id == selectedID }) }) ?? true else { return false }
+        let customTaskTitle = rawCustomTaskTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedCustomTaskTitle = customTaskTitle?.isEmpty == false ? customTaskTitle : nil
 
         do {
             let session = try focusSessionService.startSession(
                 roomID: room.id,
                 configuration: FocusSessionConfiguration(
                     durationMinutes: durationMinutes,
-                    taskID: task.id
+                    taskIDs: Array(taskIDs),
+                    customTaskTitle: normalizedCustomTaskTitle,
+                    sceneID: sceneID
                 ),
-                candidateScenes: RoomSceneCatalog.builtIn
+                candidateScenes: scenes
             )
             guard let scene = scenes.first(where: { $0.id == session.sceneID }) else { return false }
 
@@ -591,7 +619,7 @@ final class AppModel: ObservableObject {
             return false
         }
 
-        tasks.append(FocusTask(title: title, isCompleted: false))
+        tasks.insert(FocusTask(title: title, isCompleted: false), at: 0)
         invalidateDailyTodoSuggestionIfNeeded()
         showToast("已经放到桌上")
         return true
@@ -612,7 +640,7 @@ final class AppModel: ObservableObject {
     }
 
     func deleteTask(_ taskID: FocusTask.ID) {
-        guard activeFocusSession?.taskID != taskID else { return }
+        guard activeFocusSession?.taskIDs.contains(taskID) != true else { return }
         tasks.removeAll { $0.id == taskID }
         invalidateDailyTodoSuggestionIfNeeded()
     }
@@ -704,7 +732,7 @@ final class AppModel: ObservableObject {
     }
 
     func copyDeskCode() {
-        guard let code = currentDeskRoom?.code else { return }
+        let code = shareableDeskCode
         cancelSuggestions(in: .waitingForPartner)
         refreshSuggestions()
         ClipboardClient.writeText(code)

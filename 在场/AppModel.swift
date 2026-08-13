@@ -134,7 +134,8 @@ private extension PresenceSuggestionCategory {
 enum AppSheet: String, Identifiable {
     case desk
     case voice
-    case memory
+    case phonograph
+    case memoryArchive
     case scenes
     case sceneWorkshop
     case context
@@ -860,12 +861,38 @@ final class AppModel: ObservableObject {
                 primaryOption: PresenceSuggestionOption(title: "打开留声机", action: .openVoiceRecorder),
                 context: .focusCompleted(partnerID: partner.id)
             ))
+            memory.makeDraft(
+                title: "\(partner.name)这一段",
+                mood: .warm,
+                observation: "这一段活动已经结束，适合把刚刚发生的细节留下来。",
+                keyMoment: "结束时的那一刻",
+                delivery: .activityEnd,
+                sourceEvent: .activityEnded,
+                sourceActivityID: session.id,
+                creatorName: "我",
+                participantNames: [partner.name],
+                visibility: .shared,
+                resourceReferences: lastActivityEndedEvent.map { [MemoryResourceReference(kind: "activityEndedEvent", value: $0.id.uuidString)] } ?? []
+            )
         } else {
             offerSuggestion(PresenceSuggestion(
                 message: "这一段已经完成，先休息一会儿。",
                 primaryOption: PresenceSuggestionOption(title: "休息一下", action: .beginRest),
                 context: .focusCompleted(partnerID: nil)
             ))
+            memory.makeDraft(
+                title: "这一段活动",
+                mood: .quiet,
+                observation: "这一段活动已经结束。",
+                keyMoment: "结束时的那一刻",
+                delivery: .activityEnd,
+                sourceEvent: .activityEnded,
+                sourceActivityID: session.id,
+                creatorName: "我",
+                participantNames: [],
+                visibility: .shared,
+                resourceReferences: lastActivityEndedEvent.map { [MemoryResourceReference(kind: "activityEndedEvent", value: $0.id.uuidString)] } ?? []
+            )
         }
     }
 
@@ -882,6 +909,7 @@ final class AppModel: ObservableObject {
         focusSessionStarted = false
         cancelSuggestions(in: .focusPaused, .timerReset)
         lastActivityEndedEvent = focusSessionService.endSession(session, reason: reason)
+        memory.deliverCards(for: .activityEnded, activityID: session.id)
 
         if let partner = currentDeskPartner {
             offerSuggestion(PresenceSuggestion(
@@ -958,6 +986,17 @@ final class AppModel: ObservableObject {
         let day = Self.currentDayKey()
         guard !dailyTodoSuggestedDays.contains(day) else { return }
         dailyTodoSuggestedDays.insert(day)
+        memory.makeDraft(
+            title: "今日留声机",
+            mood: .bright,
+            observation: "今天的 Todo 已全部完成，可以把今天收尾成一张回忆卡。",
+            keyMoment: "今天全部完成的那一刻",
+            delivery: .archiveOnly,
+            sourceEvent: .dailyTodoCompleted,
+            creatorName: "我",
+            participantNames: [],
+            visibility: .shared
+        )
         offerSuggestion(PresenceSuggestion(
             message: "今天放在桌上的事都完成了。要用留声机记下今天吗？",
             primaryOption: PresenceSuggestionOption(title: "打开留声机", action: .openVoiceRecorder),

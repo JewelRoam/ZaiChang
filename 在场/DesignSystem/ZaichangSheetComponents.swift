@@ -28,12 +28,14 @@ struct SheetContainer<Content: View>: View {
     let eyebrow: String
     let title: String
     let dismiss: DismissAction
+    let maxWidth: CGFloat
     @ViewBuilder let content: Content
 
-    init(eyebrow: String, title: String, dismiss: DismissAction, @ViewBuilder content: () -> Content) {
+    init(eyebrow: String, title: String, dismiss: DismissAction, maxWidth: CGFloat = LayoutMetrics.sheetMaxWidth, @ViewBuilder content: () -> Content) {
         self.eyebrow = eyebrow
         self.title = title
         self.dismiss = dismiss
+        self.maxWidth = maxWidth
         self.content = content()
     }
 
@@ -48,7 +50,7 @@ struct SheetContainer<Content: View>: View {
             sheetContent
 #endif
         }
-        .adaptiveSheetFrame()
+        .adaptiveSheetFrame(maxWidth: maxWidth)
         .background(Palette.surface2)
         .foregroundStyle(Palette.ink)
         .adaptiveSheetPresentation()

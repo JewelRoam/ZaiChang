@@ -160,7 +160,7 @@ final class VoiceRecorderController: NSObject, ObservableObject {
     }
 
     @discardableResult
-    func saveDraft(delivery: VoiceDelivery) -> SavedVoiceNote? {
+    func saveDraft(delivery: VoiceDelivery = .focusEnd) -> SavedVoiceNote? {
         guard let draftURL, hasDraft else { return nil }
         var destination: URL?
         do {

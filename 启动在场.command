@@ -1,40 +1,42 @@
 #!/bin/zsh
 
-set -e
+# Build and launch the current macOS target from this repository.
+set -u
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-DERIVED_DATA_DIR="$HOME/Library/Developer/Xcode/DerivedData"
+PROJECT_FILE="$PROJECT_DIR/在场.xcodeproj"
+SCHEME="在场"
+DERIVED_DATA_DIR="$PROJECT_DIR/.derived-data"
+APP_PATH="$DERIVED_DATA_DIR/Build/Products/Debug/在场.app"
 
-APP_PATH="$(find "$DERIVED_DATA_DIR" \
-  -path '*/Build/Products/Debug/在场.app/Contents/MacOS/在场' \
-  -type f -print 2>/dev/null \
-  | while IFS= read -r executable; do
-      app_dir="${executable%/Contents/MacOS/在场}"
-      printf '%s\n' "$app_dir"
-    done \
-  | head -n 1)"
-
-if [[ -z "$APP_PATH" ]]; then
-  echo "未找到构建产物，正在编译在场…"
-  xcodebuild \
-    -project "$PROJECT_DIR/在场.xcodeproj" \
-    -scheme 在场 \
-    -destination 'platform=macOS' \
-    CODE_SIGNING_ALLOWED=NO \
-    build
-  APP_PATH="$(find "$DERIVED_DATA_DIR" \
-    -path '*/Build/Products/Debug/在场.app/Contents/MacOS/在场' \
-    -type f -print 2>/dev/null \
-    | while IFS= read -r executable; do
-        printf '%s\n' "${executable%/Contents/MacOS/在场}"
-      done \
-    | head -n 1)"
-fi
-
-if [[ -z "$APP_PATH" || ! -x "$APP_PATH/Contents/MacOS/在场" ]]; then
-  echo "找不到可启动的在场应用。"
+if [[ ! -d "$PROJECT_FILE" ]]; then
+  print -u2 "找不到项目：$PROJECT_FILE"
   exit 1
 fi
 
-open "$APP_PATH"
-echo "已启动：$APP_PATH"
+NO_BUILD=false
+if [[ "${1:-}" == "--no-build" ]]; then
+  NO_BUILD=true
+fi
+
+if [[ "$NO_BUILD" != true || ! -x "$APP_PATH/Contents/MacOS/在场" ]]; then
+  print "正在构建在场…"
+  /usr/bin/xcodebuild \
+    -project "$PROJECT_FILE" \
+    -scheme "$SCHEME" \
+    -configuration Debug \
+    -destination 'platform=macOS' \
+    -derivedDataPath "$DERIVED_DATA_DIR" \
+    CODE_SIGNING_ALLOWED=NO \
+    build
+fi
+
+if [[ ! -x "$APP_PATH/Contents/MacOS/在场" ]]; then
+  print -u2 "构建完成，但找不到应用：$APP_PATH"
+  exit 1
+fi
+
+# Close the currently running copy so the user always opens this build.
+/usr/bin/osascript -e 'tell application "在场" to quit' >/dev/null 2>&1 || true
+/usr/bin/open "$APP_PATH"
+print "已启动：$APP_PATH"

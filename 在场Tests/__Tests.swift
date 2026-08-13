@@ -15,6 +15,22 @@ import AppKit
 
 @Suite("在场 AppModel")
 struct AppModelTests {
+@Test("应用数据路径统一到同一个根目录")
+    func appStoragePathsShareRoot() {
+        let memories = AppStoragePaths.memoriesURL()
+        let scenes = AppStoragePaths.generatedScenesURL()
+        let api = AppStoragePaths.apiConfigurationURL()
+        let deskPets = AppStoragePaths.deskPetsDirectory()
+        let recordings = AppStoragePaths.recordingsDirectory()
+
+        let root = AppStoragePaths.applicationSupportRoot().path
+        #expect(memories.path.hasPrefix(root))
+        #expect(scenes.path.hasPrefix(root))
+        #expect(api.path.hasPrefix(root))
+        #expect(deskPets.path.hasPrefix(root))
+        #expect(recordings.path.hasPrefix(root))
+    }
+
 
     @Test("记忆草稿生命周期与生成运行态彼此独立")
     @MainActor
@@ -468,7 +484,7 @@ struct AppModelTests {
         #expect(model.activeSuggestion == nil)
     }
 
-    @Test("专注结束且有同桌时建议打开留声机")
+    @Test("专注结束且有同桌时建议打开留声机页")
     @MainActor
     func focusCompletionWithPartnerSuggestsVoiceRecorder() throws {
         let model = AppModel()
@@ -478,13 +494,13 @@ struct AppModelTests {
         let suggestion = try #require(model.activeSuggestion)
 
         #expect(suggestion.message == "这一段已经完成。要给阿禾留一句话吗？")
-        #expect(suggestion.primaryOption.action == .openVoiceRecorder)
+        #expect(suggestion.primaryOption.action == .openPhonograph)
         #expect(model.toastMessage == nil)
 
         model.performSuggestion(suggestion.id)
 
         #expect(model.activeSuggestion == nil)
-        #expect(model.activeSheet == .voice)
+        #expect(model.activeSheet == .phonograph)
     }
 
     @Test("专注结束且没有同桌时建议休息")
@@ -572,7 +588,7 @@ struct AppModelTests {
         #expect(model.activeFocusSession == nil)
     }
 
-    @Test("有同桌时计时结束产生对应事件并引导留声机")
+    @Test("有同桌时计时结束产生对应事件并引导留声机页")
     @MainActor
     func timerCompletionEndsActiveSession() async throws {
         let model = AppModel()
@@ -584,7 +600,8 @@ struct AppModelTests {
         model.completeFocusSession()
 
         #expect(model.lastActivityEndedEvent?.reason == .timerCompleted)
-        #expect(model.activeSuggestion?.primaryOption.action == .openVoiceRecorder)
+        #expect(model.activeSuggestion?.primaryOption.action == .openPhonograph)
+        #expect(model.activeSheet == .phonograph)
         #expect(model.activeFocusSession == nil)
     }
 

@@ -299,30 +299,80 @@ struct DeskPetPairOverlay: View {
     var body: some View {
         GeometryReader { geo in
             let petSize = min(max(min(geo.size.width, geo.size.height) * 0.20, 76), 176)
-            HStack(alignment: .bottom, spacing: max(8, petSize * 0.10)) {
-                BuiltInOwnDeskPetView(controller: ownController, size: petSize)
+            let ownDefault = defaultOwnPosition(in: geo.size, petSize: petSize)
+            let partnerDefault = defaultPartnerPosition(in: geo.size, petSize: petSize)
+
+            ZStack {
+                DraggableSceneDeskPet(
+                    position: controller.ownScenePosition,
+                    defaultPosition: ownDefault,
+                    size: petSize,
+                    canvasSize: geo.size,
+                    onMove: controller.moveOwnPet
+                ) { isDragging in
+                    BuiltInOwnDeskPetView(controller: ownController, size: petSize, autonomousJump: !isDragging)
+                }
+
                 if let partnerProfile {
-                    InteractiveDeskPetView(
-                        controller: controller,
-                        profile: partnerProfile,
+                    DraggableSceneDeskPet(
+                        position: controller.partnerScenePosition,
+                        defaultPosition: partnerDefault,
                         size: petSize,
-                        onDoubleTap: onPartnerDoubleTap,
-                        autonomousJump: true
-                    )
+                        canvasSize: geo.size,
+                        onMove: controller.movePartnerPet
+                    ) { isDragging in
+                        InteractiveDeskPetView(
+                            controller: controller,
+                            profile: partnerProfile,
+                            size: petSize,
+                            onDoubleTap: onPartnerDoubleTap,
+                            autonomousJump: true,
+                            isDragging: isDragging
+                        )
+                    }
                 } else if let partnerName {
-                    PartnerDeskPetPlaceholder(name: partnerName, size: petSize)
+                    DraggableSceneDeskPet(
+                        position: controller.partnerScenePosition,
+                        defaultPosition: partnerDefault,
+                        size: petSize,
+                        canvasSize: geo.size,
+                        onMove: controller.movePartnerPet
+                    ) { isDragging in
+                        PartnerDeskPetPlaceholder(
+                            name: partnerName,
+                            size: petSize,
+                            autonomousJump: !isDragging
+                        )
+                    }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onAppear { controller.updatePartnerPetSize(petSize) }
             .onChange(of: petSize) { _, newValue in controller.updatePartnerPetSize(newValue) }
         }
+    }
+
+    private func defaultOwnPosition(in canvasSize: CGSize, petSize: CGFloat) -> CGPoint {
+        let half = petSize / 2
+        return CGPoint(
+            x: canvasSize.width - petSize * 1.5 - max(8, petSize * 0.10) - 22,
+            y: canvasSize.height - half - 84
+        )
+    }
+
+    private func defaultPartnerPosition(in canvasSize: CGSize, petSize: CGFloat) -> CGPoint {
+        let half = petSize / 2
+        return CGPoint(
+            x: canvasSize.width - half - 22,
+            y: canvasSize.height - half - 84
+        )
     }
 }
 
 private struct BuiltInOwnDeskPetView: View {
     @ObservedObject var controller: OwnDeskPetController
     let size: CGFloat
+    var autonomousJump = true
 
     var body: some View {
         Group {
@@ -338,7 +388,7 @@ private struct BuiltInOwnDeskPetView: View {
         }
         .frame(width: size, height: size)
         .shadow(color: .black.opacity(0.34), radius: 8, y: 4)
-        .autonomousJump(size: size)
+        .scenePetJump(size: size, isEnabled: autonomousJump)
         .accessibilityLabel("我的桌宠")
     }
 }
@@ -346,6 +396,7 @@ private struct BuiltInOwnDeskPetView: View {
 private struct PartnerDeskPetPlaceholder: View {
     let name: String
     let size: CGFloat
+    var autonomousJump = true
 
     var body: some View {
         PixelDeskPetSilhouette(
@@ -353,18 +404,87 @@ private struct PartnerDeskPetPlaceholder: View {
             secondary: Color(red: 0.68, green: 0.76, blue: 0.55),
             size: size
         )
-        .autonomousJump(size: size)
+        .scenePetJump(size: size, isEnabled: autonomousJump)
         .accessibilityLabel("\(name)的默认桌宠")
+    }
+}
+
+private struct DraggableSceneDeskPet<Content: View>: View {
+    let position: CGPoint?
+    let defaultPosition: CGPoint
+    let size: CGFloat
+    let canvasSize: CGSize
+    let onMove: (CGPoint) -> Void
+    @ViewBuilder let content: (_ isDragging: Bool) -> Content
+
+    @GestureState private var dragOffset: CGSize = .zero
+
+    var body: some View {
+        let basePosition = clamped(position ?? defaultPosition)
+        let currentPosition = clamped(
+            CGPoint(
+                x: basePosition.x + dragOffset.width,
+                y: basePosition.y + dragOffset.height
+            )
+        )
+
+        content(dragOffset != .zero)
+            .frame(width: size, height: size)
+            .contentShape(Rectangle())
+            .position(currentPosition)
+            .gesture(
+                DragGesture(minimumDistance: 1)
+                    .updating($dragOffset) { value, state, _ in
+                        state = value.translation
+                    }
+                    .onEnded { value in
+                        onMove(
+                            clamped(
+                                CGPoint(
+                                    x: basePosition.x + value.translation.width,
+                                    y: basePosition.y + value.translation.height
+                                )
+                            )
+                        )
+                    }
+            )
+            .accessibilityAddTraits(.isButton)
+    }
+
+    private func clamped(_ point: CGPoint) -> CGPoint {
+        let half = size / 2
+        let minX = half
+        let maxX = max(minX, canvasSize.width - half)
+        let minY = half
+        let maxY = max(minY, canvasSize.height - half)
+        return CGPoint(
+            x: min(max(point.x, minX), maxX),
+            y: min(max(point.y, minY), maxY)
+        )
     }
 }
 
 /// 让桌宠每隔 6~13 秒随机跳一跳。每个视图各自计时，互相独立。
 private struct AutonomousJumpModifier: ViewModifier {
     let size: CGFloat
+    let isEnabled: Bool
     @State private var jumpTrigger = 0
 
     func body(content: Content) -> some View {
         content
+            .overlay {
+                if isEnabled {
+                    EmptyView()
+                        .task {
+                            while !Task.isCancelled {
+                                let delay = 6.0 + Double.random(in: 0...7)
+                                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                                if Task.isCancelled { break }
+                                jumpTrigger += 1
+                            }
+                        }
+                }
+            }
             .keyframeAnimator(initialValue: 0.0, trigger: jumpTrigger) { view, offsetY in
                 view.offset(y: offsetY)
             } keyframes: { _ in
@@ -373,20 +493,12 @@ private struct AutonomousJumpModifier: ViewModifier {
                     SpringKeyframe(0, duration: 0.32, spring: .bouncy)
                 }
             }
-            .task {
-                while !Task.isCancelled {
-                    let delay = 6.0 + Double.random(in: 0...7)
-                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                    if Task.isCancelled { break }
-                    jumpTrigger += 1
-                }
-            }
     }
 }
 
 extension View {
-    func autonomousJump(size: CGFloat) -> some View {
-        modifier(AutonomousJumpModifier(size: size))
+    func scenePetJump(size: CGFloat, isEnabled: Bool = true) -> some View {
+        modifier(AutonomousJumpModifier(size: size, isEnabled: isEnabled))
     }
 }
 

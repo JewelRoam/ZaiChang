@@ -70,9 +70,7 @@ struct APIConfiguration: Equatable {
         if let override = ProcessInfo.processInfo.environment["ZAICHANG_API_CONFIG"], !override.isEmpty {
             return URL(fileURLWithPath: override)
         }
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Zaichang", isDirectory: true)
-        return support.appendingPathComponent("api.yaml")
+        return AppStoragePaths.apiConfigurationURL()
     }
 
     static func load() -> APIConfiguration {

@@ -9,6 +9,7 @@ Icon
 
 # Xcode derived and per-user state
 DerivedData/
+.derived-data/
 *.xcuserstate
 xcuserdata/
 # Local AI credentials. Keep only Config/api.example.yaml in the repository.

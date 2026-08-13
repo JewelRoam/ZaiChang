@@ -138,9 +138,7 @@ final class ScenePersistence {
 
     init(fileManager: FileManager = .default, fileURL: URL? = nil) {
         self.fileManager = fileManager
-        self.fileURL = fileURL ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Zaichang", isDirectory: true)
-            .appendingPathComponent("generated-scenes.json")
+        self.fileURL = fileURL ?? AppStoragePaths.generatedScenesURL(fileManager: fileManager)
     }
 
     func load() -> [RoomScene] {

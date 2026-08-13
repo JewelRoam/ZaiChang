@@ -434,8 +434,7 @@ final class MemoryPersistence {
     private let fileURL: URL
     init(fileURL: URL) { self.fileURL = fileURL }
     init(fileManager: FileManager = .default) {
-        fileURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Zaichang", isDirectory: true).appendingPathComponent("memories.json")
+        fileURL = AppStoragePaths.memoriesURL(fileManager: fileManager)
     }
     func load() -> MemoryStore {
         guard let data = try? Data(contentsOf: fileURL), let store = try? JSONDecoder().decode(MemoryStore.self, from: data) else { return MemoryStore(drafts: [], cards: []) }

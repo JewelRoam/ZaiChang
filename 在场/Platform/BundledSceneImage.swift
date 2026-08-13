@@ -160,9 +160,7 @@ final class SceneAssetStore {
     private let fileManager = FileManager.default
 
     private var rootURL: URL {
-        fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Zaichang", isDirectory: true)
-            .appendingPathComponent("Scenes", isDirectory: true)
+        AppStoragePaths.scenesDirectory(fileManager: fileManager)
     }
 
     func url(for relativePath: String) -> URL? {

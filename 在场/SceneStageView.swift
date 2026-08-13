@@ -370,7 +370,7 @@ private extension PresenceSuggestionAction {
         case .beginFocus: "play.fill"
         case .resumeFocus: "play.fill"
         case .inviteDeskMate: "person.badge.plus"
-        case .openVoiceRecorder: "mic"
+        case .openPhonograph: "record.circle"
         case .beginRest: "cup.and.saucer"
         }
     }

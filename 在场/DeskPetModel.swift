@@ -195,9 +195,7 @@ final class DeskPetPersistence {
     }
 
     private static func defaultDirectory(fileManager: FileManager) -> URL {
-        fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Zaichang", isDirectory: true)
-            .appendingPathComponent("DeskPets", isDirectory: true)
+        AppStoragePaths.deskPetsDirectory(fileManager: fileManager)
     }
 }
 
@@ -446,6 +444,8 @@ final class DeskPetController: ObservableObject {
     @Published private(set) var partnerProfile: DeskPetProfile?
     @Published var isFloating: Bool = false
     @Published private(set) var nudgeFeedback: DeskPetNudgeFeedback?
+    /// The built-in "own" pet's center in scene-local coordinates. `nil` uses the default anchor.
+    @Published private(set) var ownScenePosition: CGPoint?
     /// The partner pet's center in scene-local coordinates. `nil` uses the default anchor.
     @Published private(set) var partnerScenePosition: CGPoint?
     /// Only a pet owned by the partner in the current room may enter the scene or desktop.
@@ -504,10 +504,12 @@ final class DeskPetController: ObservableObject {
         let nextID = partner?.id
         guard activePartnerID != nextID else { return }
         activePartnerID = nextID
-        if nextID == nil {
-            partnerScenePosition = nil
-            dismissNudgeFeedback()
-        }
+        partnerScenePosition = nil
+        if nextID == nil { dismissNudgeFeedback() }
+    }
+
+    func moveOwnPet(to position: CGPoint) {
+        ownScenePosition = position
     }
 
     func movePartnerPet(to position: CGPoint) {
@@ -609,6 +611,7 @@ final class DeskPetController: ObservableObject {
         pendingPhotoData = nil
         pendingPartner = nil
         partnerProfile = nil
+        ownScenePosition = nil
         partnerScenePosition = nil
         state = .idle
         try? persistence.remove()

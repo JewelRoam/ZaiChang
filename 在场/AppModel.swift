@@ -51,7 +51,7 @@ enum PresenceSuggestionAction: Equatable {
     case beginFocus
     case resumeFocus
     case inviteDeskMate
-    case openVoiceRecorder
+    case openPhonograph
     case beginRest
 }
 
@@ -555,7 +555,7 @@ final class AppModel: ObservableObject {
                     customTaskTitle: normalizedCustomTaskTitle,
                     sceneID: sceneID
                 ),
-                candidateScenes: scenes
+                candidateScenes: RoomSceneCatalog.builtIn
             )
             guard let scene = scenes.first(where: { $0.id == session.sceneID }) else { return false }
 
@@ -788,8 +788,8 @@ final class AppModel: ObservableObject {
             showToast("继续这一段")
         case .inviteDeskMate:
             copyDeskCode()
-        case .openVoiceRecorder:
-            activeSheet = .voice
+        case .openPhonograph:
+            activeSheet = .phonograph
         case .beginRest:
             setPresence(.away)
         }
@@ -847,18 +847,73 @@ final class AppModel: ObservableObject {
         cancelSuggestions(in: .focusPaused, .timerReset)
         if activeFocusSession != nil {
             endFocusSession(reason: .timerCompleted)
-            return
+        } else {
+            remainingSeconds = 0
+            timerRunning = false
+            timerEndDate = nil
+            focusSessionStarted = false
+            if let partner = currentDeskPartner {
+                offerSuggestion(PresenceSuggestion(
+                    message: "这一段已经完成。要给\(partner.name)留一句话吗？",
+                    primaryOption: PresenceSuggestionOption(title: "打开留声机", action: .openPhonograph),
+                    context: .focusCompleted(partnerID: partner.id)
+                ))
+                memory.makeDraft(
+                    title: "\(partner.name)这一段",
+                    mood: .warm,
+                    observation: "这一段活动已经结束，适合把刚刚发生的细节留下来。",
+                    keyMoment: "结束时的那一刻",
+                    delivery: .activityEnd,
+                    sourceEvent: .activityEnded,
+                    sourceActivityID: nil,
+                    creatorName: "我",
+                    participantNames: [partner.name],
+                    visibility: .shared,
+                    resourceReferences: lastActivityEndedEvent.map { [MemoryResourceReference(kind: "activityEndedEvent", value: $0.id.uuidString)] } ?? []
+                )
+            } else {
+                offerSuggestion(PresenceSuggestion(
+                    message: "这一段已经完成，先休息一会儿。",
+                    primaryOption: PresenceSuggestionOption(title: "休息一下", action: .beginRest),
+                    context: .focusCompleted(partnerID: nil)
+                ))
+                memory.makeDraft(
+                    title: "这一段活动",
+                    mood: .quiet,
+                    observation: "这一段活动已经结束。",
+                    keyMoment: "结束时的那一刻",
+                    delivery: .activityEnd,
+                    sourceEvent: .activityEnded,
+                    sourceActivityID: nil,
+                    creatorName: "我",
+                    participantNames: [],
+                    visibility: .shared,
+                    resourceReferences: lastActivityEndedEvent.map { [MemoryResourceReference(kind: "activityEndedEvent", value: $0.id.uuidString)] } ?? []
+                )
+            }
         }
+    }
 
+    func manuallyEndFocusSession() {
+        endFocusSession(reason: .manuallyEnded)
+    }
+
+    private func endFocusSession(reason: ActivityEndReason) {
+        guard let session = activeFocusSession else { return }
+        let partner = currentDeskPartner
+        activeFocusSession = nil
         remainingSeconds = 0
         timerRunning = false
         timerEndDate = nil
         focusSessionStarted = false
+        cancelSuggestions(in: .focusPaused, .timerReset)
+        lastActivityEndedEvent = focusSessionService.endSession(session, reason: reason)
+        memory.deliverCards(for: .activityEnded, activityID: session.id)
 
-        if let partner = currentDeskPartner {
+        if let partner {
             offerSuggestion(PresenceSuggestion(
                 message: "这一段已经完成。要给\(partner.name)留一句话吗？",
-                primaryOption: PresenceSuggestionOption(title: "打开留声机", action: .openVoiceRecorder),
+                primaryOption: PresenceSuggestionOption(title: "打开留声机", action: .openPhonograph),
                 context: .focusCompleted(partnerID: partner.id)
             ))
             memory.makeDraft(
@@ -868,7 +923,7 @@ final class AppModel: ObservableObject {
                 keyMoment: "结束时的那一刻",
                 delivery: .activityEnd,
                 sourceEvent: .activityEnded,
-                sourceActivityID: nil,
+                sourceActivityID: session.id,
                 creatorName: "我",
                 participantNames: [partner.name],
                 visibility: .shared,
@@ -887,42 +942,12 @@ final class AppModel: ObservableObject {
                 keyMoment: "结束时的那一刻",
                 delivery: .activityEnd,
                 sourceEvent: .activityEnded,
-                sourceActivityID: nil,
+                sourceActivityID: session.id,
                 creatorName: "我",
                 participantNames: [],
                 visibility: .shared,
                 resourceReferences: lastActivityEndedEvent.map { [MemoryResourceReference(kind: "activityEndedEvent", value: $0.id.uuidString)] } ?? []
             )
-        }
-    }
-
-    func manuallyEndFocusSession() {
-        endFocusSession(reason: .manuallyEnded)
-    }
-
-    private func endFocusSession(reason: ActivityEndReason) {
-        guard let session = activeFocusSession else { return }
-        activeFocusSession = nil
-        remainingSeconds = 0
-        timerRunning = false
-        timerEndDate = nil
-        focusSessionStarted = false
-        cancelSuggestions(in: .focusPaused, .timerReset)
-        lastActivityEndedEvent = focusSessionService.endSession(session, reason: reason)
-        memory.deliverCards(for: .activityEnded, activityID: session.id)
-
-        if let partner = currentDeskPartner {
-            offerSuggestion(PresenceSuggestion(
-                message: "这一段已经完成。要给\(partner.name)留一句话吗？",
-                primaryOption: PresenceSuggestionOption(title: "打开留声机", action: .openVoiceRecorder),
-                context: .focusCompleted(partnerID: partner.id)
-            ))
-        } else {
-            offerSuggestion(PresenceSuggestion(
-                message: "这一段已经完成，先休息一会儿。",
-                primaryOption: PresenceSuggestionOption(title: "休息一下", action: .beginRest),
-                context: .focusCompleted(partnerID: nil)
-            ))
         }
     }
 
@@ -999,7 +1024,7 @@ final class AppModel: ObservableObject {
         )
         offerSuggestion(PresenceSuggestion(
             message: "今天放在桌上的事都完成了。要用留声机记下今天吗？",
-            primaryOption: PresenceSuggestionOption(title: "打开留声机", action: .openVoiceRecorder),
+            primaryOption: PresenceSuggestionOption(title: "打开留声机", action: .openPhonograph),
             context: .dailyTodoCompleted(day: day)
         ))
     }

@@ -223,16 +223,15 @@ final class VoiceRecorderController: NSObject, ObservableObject {
     }
 
     private var applicationDirectory: URL {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return base.appendingPathComponent("在场", isDirectory: true)
+        AppStoragePaths.applicationSupportRoot()
     }
 
     private var recordingsDirectory: URL {
-        applicationDirectory.appendingPathComponent("Recordings", isDirectory: true)
+        AppStoragePaths.recordingsDirectory()
     }
 
     private var metadataURL: URL {
-        applicationDirectory.appendingPathComponent("voice-notes.json")
+        AppStoragePaths.voiceNotesURL()
     }
 
     private func makeDraftURL() throws -> URL {

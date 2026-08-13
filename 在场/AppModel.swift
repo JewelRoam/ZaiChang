@@ -287,6 +287,10 @@ final class AppModel: ObservableObject {
     var completedTaskCount: Int { tasks.filter(\.isCompleted).count }
     var canAddTask: Bool { tasks.count < Self.maximumTaskCount }
     var incompleteTasks: [FocusTask] { tasks.filter { !$0.isCompleted } }
+    var orderedTasks: [FocusTask] {
+        tasks.filter { !$0.isCompleted } + tasks.filter(\.isCompleted)
+    }
+    var shareableDeskCode: String { currentDeskRoom?.code ?? deskRoomService.demoInviteCode }
     private var allTasksCompleted: Bool { !tasks.isEmpty && tasks.allSatisfy(\.isCompleted) }
 
     var currentDeskRoom: DeskRoom? {
@@ -296,8 +300,18 @@ final class AppModel: ObservableObject {
 
     var currentDeskPartner: DeskPartner? { currentDeskRoom?.partner }
     var activeFocusTask: FocusTask? {
-        guard let taskID = activeFocusSession?.taskID else { return nil }
+        guard let taskID = activeFocusSession?.taskIDs.first else { return nil }
         return tasks.first { $0.id == taskID }
+    }
+
+    var activeFocusTasks: [FocusTask] {
+        guard let taskIDs = activeFocusSession?.taskIDs else { return [] }
+        return taskIDs.compactMap { taskID in tasks.first { $0.id == taskID } }
+    }
+
+    var activeFocusSummary: String? {
+        let titles = activeFocusTasks.map(\.title) + [activeFocusSession?.customTaskTitle].compactMap { $0 }
+        return titles.isEmpty ? nil : titles.joined(separator: " · ")
     }
     var deskActionTitle: String { currentDeskRoom == nil ? "加入同桌" : "邀请同桌" }
 
@@ -326,6 +340,57 @@ final class AppModel: ObservableObject {
             message: "已拍一拍\(partner.name)",
             kind: .sent
         )
+    }
+
+    func handleDemoControlCommand(_ command: DemoControlCommand) {
+        switch command.type {
+        case .advanceTime:
+            guard let seconds = command.seconds else { return }
+            advanceDemoTime(by: seconds)
+        case .receiveNudge:
+            receiveDemoNudge()
+        }
+    }
+
+    private func advanceDemoTime(by seconds: Int) {
+        guard seconds > 0 else { return }
+        let interval = TimeInterval(seconds)
+
+        if let timerEndDate {
+            self.timerEndDate = timerEndDate.addingTimeInterval(-interval)
+        }
+        if let lastNudgeSentAt {
+            self.lastNudgeSentAt = lastNudgeSentAt.addingTimeInterval(-interval)
+        }
+        scheduledSuggestions = scheduledSuggestions.mapValues { scheduled in
+            ScheduledPresenceSuggestion(
+                dueAt: scheduled.dueAt.addingTimeInterval(-interval),
+                suggestion: scheduled.suggestion
+            )
+        }
+        if timerRunning {
+            presenceSeconds += min(seconds, remainingSeconds)
+            updateRemainingTime()
+            if remainingSeconds == 0 {
+                completeFocusSession()
+                return
+            }
+        }
+        refreshSuggestions()
+    }
+
+    private func receiveDemoNudge() {
+        guard let partner = currentDeskPartner else {
+            showToast("当前没有同桌，无法模拟收到拍一拍")
+            return
+        }
+        deskPet.presentNudgeFeedback(
+            message: "\(partner.name)拍了拍你",
+            kind: .received
+        )
+        if deskPet.profile?.isEnabled != true {
+            showToast("\(partner.name)拍了拍你")
+        }
     }
 
     var selectedScene: RoomScene {
@@ -457,17 +522,31 @@ final class AppModel: ObservableObject {
 
     @discardableResult
     func beginDeskFocus(durationMinutes: Int, taskID: FocusTask.ID) -> Bool {
+        beginDeskFocus(durationMinutes: durationMinutes, taskIDs: [taskID], customTaskTitle: nil, sceneID: nil)
+    }
+
+    @discardableResult
+    func beginDeskFocus(
+        durationMinutes: Int,
+        taskIDs: Set<FocusTask.ID>,
+        customTaskTitle rawCustomTaskTitle: String?,
+        sceneID: RoomScene.ID?
+    ) -> Bool {
+        let selectableTaskIDs = Set(incompleteTasks.map(\.id))
         guard let room = currentDeskRoom,
-              let task = tasks.first(where: { $0.id == taskID && !$0.isCompleted }) else {
-            return false
-        }
+              taskIDs.isSubset(of: selectableTaskIDs),
+              sceneID.map({ selectedID in RoomSceneCatalog.builtIn.contains(where: { $0.id == selectedID }) }) ?? true else { return false }
+        let customTaskTitle = rawCustomTaskTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedCustomTaskTitle = customTaskTitle?.isEmpty == false ? customTaskTitle : nil
 
         do {
             let session = try focusSessionService.startSession(
                 roomID: room.id,
                 configuration: FocusSessionConfiguration(
                     durationMinutes: durationMinutes,
-                    taskID: task.id
+                    taskIDs: Array(taskIDs),
+                    customTaskTitle: normalizedCustomTaskTitle,
+                    sceneID: sceneID
                 ),
                 candidateScenes: RoomSceneCatalog.builtIn
             )
@@ -534,7 +613,7 @@ final class AppModel: ObservableObject {
             return false
         }
 
-        tasks.append(FocusTask(title: title, isCompleted: false))
+        tasks.insert(FocusTask(title: title, isCompleted: false), at: 0)
         invalidateDailyTodoSuggestionIfNeeded()
         showToast("已经放到桌上")
         return true
@@ -555,7 +634,7 @@ final class AppModel: ObservableObject {
     }
 
     func deleteTask(_ taskID: FocusTask.ID) {
-        guard activeFocusSession?.taskID != taskID else { return }
+        guard activeFocusSession?.taskIDs.contains(taskID) != true else { return }
         tasks.removeAll { $0.id == taskID }
         invalidateDailyTodoSuggestionIfNeeded()
     }
@@ -647,7 +726,7 @@ final class AppModel: ObservableObject {
     }
 
     func copyDeskCode() {
-        guard let code = currentDeskRoom?.code else { return }
+        let code = shareableDeskCode
         cancelSuggestions(in: .waitingForPartner)
         refreshSuggestions()
         ClipboardClient.writeText(code)

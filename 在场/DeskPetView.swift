@@ -167,8 +167,8 @@ struct InteractiveDeskPetView: View {
                 .frame(width: size, height: size)
                 .contentShape(Rectangle())
                 .shadow(
-                    color: feedback?.kind == .sent ? Palette.amber.opacity(0.85) : .black.opacity(0.35),
-                    radius: feedback?.kind == .sent ? 14 : 8,
+                    color: feedback?.kind.animatesDeskPet == true ? Palette.amber.opacity(0.85) : .black.opacity(0.35),
+                    radius: feedback?.kind.animatesDeskPet == true ? 14 : 8,
                     y: 4
                 )
                 .keyframeAnimator(
@@ -205,7 +205,7 @@ struct InteractiveDeskPetView: View {
                     .background(.black.opacity(0.76))
                     .overlay(
                         Capsule().stroke(
-                            feedback.kind == .sent ? Palette.amber.opacity(0.8) : Color.white.opacity(0.2)
+                            feedback.kind.animatesDeskPet ? Palette.amber.opacity(0.8) : Color.white.opacity(0.2)
                         )
                     )
                     .clipShape(Capsule())
@@ -215,7 +215,7 @@ struct InteractiveDeskPetView: View {
         .frame(width: size, height: size)
         .animation(.spring(response: 0.24, dampingFraction: 0.58), value: feedback?.id)
         .onChange(of: feedback?.id) { _, _ in
-            guard feedback?.kind == .sent else { return }
+            guard feedback?.kind.animatesDeskPet == true else { return }
             sentAnimationTrigger += 1
         }
         .accessibilityLabel("\(profile.partnerName)的桌宠")

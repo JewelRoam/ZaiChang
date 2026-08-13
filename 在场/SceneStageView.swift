@@ -26,7 +26,8 @@ struct SceneStageView: View {
         ZStack {
             SceneNativeRenderer(model: model)
 
-            VStack(alignment: .leading, spacing: 7) {
+            if model.activeFocusSession == nil {
+                VStack(alignment: .leading, spacing: 7) {
                 Text(model.selectedScene.eyebrow)
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(Palette.amberSoft)
@@ -35,14 +36,30 @@ struct SceneStageView: View {
                     .font(.system(size: layout == .compact ? 22 : 26, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: layout == .compact ? 255 : nil, alignment: .leading)
-            }
-            .shadow(color: .black.opacity(0.55), radius: 8, y: 2)
+                }
+                .shadow(color: .black.opacity(0.55), radius: 8, y: 2)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(.top, 30)
             .padding(.leading, 28)
-            .allowsHitTesting(false)
+                .allowsHitTesting(false)
+            }
 
-            if let task = model.activeFocusTask {
+            if model.activeFocusSession != nil {
+                Button {
+                    endFocusConfirmationPresented = true
+                } label: {
+                    Label("结束专注", systemImage: "stop.fill")
+                        .font(.system(size: 15, weight: .bold))
+                        .padding(.horizontal, 18)
+                        .frame(minHeight: 48)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Palette.amber)
+                .foregroundStyle(Color.black)
+                .accessibilityLabel("结束专注")
+                .padding(.top, 28)
+                .padding(.leading, 28)
+            } else if let task = model.activeFocusTask {
                 HStack(spacing: 10) {
                     Label(task.title, systemImage: "checklist")
                         .font(.system(size: 11, weight: .semibold))

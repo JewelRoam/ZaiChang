@@ -36,6 +36,12 @@ struct ContentView: View {
             .onAppear { model.activateAudio() }
 #endif
             .onDisappear { model.deactivateAudio() }
+            .task {
+                guard let client = DemoControlClient() else { return }
+                await client.run { [weak model] command in
+                    model?.handleDemoControlCommand(command)
+                }
+            }
 #if os(iOS)
             .onChange(of: scenePhase) { _, phase in
                 switch phase {

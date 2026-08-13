@@ -9,7 +9,9 @@ struct DeskSheet: View {
     @State private var code = ""
     @State private var leaveConfirmationPresented = false
     @State private var selectedDurationMinutes = 25
-    @State private var selectedTaskID: FocusTask.ID?
+    @State private var selectedTaskIDs = Set<FocusTask.ID>()
+    @State private var customTaskTitle = ""
+    @State private var selectedSceneID: RoomScene.ID?
     @FocusState private var codeFieldFocused: Bool
 
     var body: some View {
@@ -205,13 +207,11 @@ struct DeskSheet: View {
 
     private var focusConfiguration: some View {
         VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("准备这一段专注")
-                    .font(.system(size: 12, weight: .semibold))
-                Text("选好时长和今日要做的事，场景会在开始时随机选择。")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Palette.muted)
-            }
+            Text("准备这一段专注")
+                .font(.system(size: 12, weight: .semibold))
+            Text("时长、Todo 和场景都可以按你的当下状态选择。")
+                .font(.system(size: 10))
+                .foregroundStyle(Palette.muted)
 
             Picker("专注时长", selection: $selectedDurationMinutes) {
                 ForEach(FocusSessionConfiguration.allowedDurations, id: \.self) { minutes in
@@ -221,38 +221,41 @@ struct DeskSheet: View {
             .pickerStyle(.segmented)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("今日 Todo")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Palette.muted)
-
+                Text("今日 Todo（可多选）").font(.system(size: 10, weight: .semibold)).foregroundStyle(Palette.muted)
                 ForEach(model.incompleteTasks) { task in
                     Button {
-                        selectedTaskID = task.id
+                        if selectedTaskIDs.contains(task.id) { selectedTaskIDs.remove(task.id) } else { selectedTaskIDs.insert(task.id) }
                     } label: {
                         HStack(spacing: 8) {
-                            Image(systemName: selectedTaskID == task.id ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(selectedTaskID == task.id ? Palette.amber : Palette.muted)
-                            Text(task.title)
-                                .lineLimit(2)
-                            Spacer(minLength: 0)
+                            Image(systemName: selectedTaskIDs.contains(task.id) ? "checkmark.square.fill" : "square")
+                            Text(task.title).lineLimit(1)
+                            Spacer()
                         }
-                        .font(.system(size: 11, weight: .medium))
-                        .adaptiveFullWidthHitTarget(minHeight: 36)
-                        .padding(.horizontal, 10)
-                        .background(Palette.surface3)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.white.opacity(0.12)))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .font(.system(size: 11))
+                        .foregroundStyle(selectedTaskIDs.contains(task.id) ? Palette.amberSoft : Palette.ink)
+                        .padding(.vertical, 5)
                     }
                     .buttonStyle(ZaichangPlainButtonStyle())
                     .accessibilityLabel("选择 Todo：\(task.title)")
                 }
+                TextField("Others（可选）", text: $customTaskTitle)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 11))
+                    .accessibilityLabel("Others")
             }
 
-            PanelButton(title: "随机场景并开始", symbol: "play.fill", isProminent: true) {
-                startFocus()
+            VStack(alignment: .leading, spacing: 6) {
+                Text("选择场景").font(.system(size: 10, weight: .semibold)).foregroundStyle(Palette.muted)
+                Picker("场景", selection: $selectedSceneID) {
+                    Text("请选择场景").tag(RoomScene.ID?.none)
+                    ForEach(RoomSceneCatalog.builtIn) { scene in Text(scene.name).tag(Optional(scene.id)) }
+                }
+                .pickerStyle(.menu)
             }
-            .disabled(selectedTaskID == nil)
-            .opacity(selectedTaskID == nil ? 0.45 : 1)
+
+            PanelButton(title: "开始这一段专注", symbol: "play.fill", isProminent: true) { startFocus() }
+                .disabled(selectedSceneID == nil)
+                .opacity(selectedSceneID == nil ? 0.45 : 1)
         }
         .padding(.vertical, 18)
         .overlay(alignment: .bottom) { Divider().overlay(Palette.line) }
@@ -268,11 +271,8 @@ struct DeskSheet: View {
     }
 
     private func startFocus() {
-        guard let selectedTaskID,
-              model.beginDeskFocus(
-                durationMinutes: selectedDurationMinutes,
-                taskID: selectedTaskID
-              ) else { return }
+        guard let selectedSceneID,
+              model.beginDeskFocus(durationMinutes: selectedDurationMinutes, taskIDs: selectedTaskIDs, customTaskTitle: customTaskTitle, sceneID: selectedSceneID) else { return }
         dismiss()
     }
 

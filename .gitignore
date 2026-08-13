@@ -18,3 +18,6 @@ api.yaml
 
 # Local AI operation journal; intentionally excluded from version control.
 AI操作记录.local.md
+
+# Local Comate specifications and generated workspace files.
+.comate/

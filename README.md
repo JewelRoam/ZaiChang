@@ -100,3 +100,33 @@ xcodebuild \
 ```
 
 单元测试不读取真实 API Key，也不会调用外部付费服务。
+
+## 本地演示指令
+
+先启动本地指令服务：
+
+```bash
+python3 scripts/demo-control-server.py
+```
+
+再在 Xcode Scheme 的 `Run > Arguments > Environment Variables` 中添加：
+
+```text
+ZAICHANG_DEMO_CONTROL_URL = http://127.0.0.1:8765
+```
+
+推进当前倒计时、延时在场建议和拍一拍冷却：
+
+```bash
+curl -X POST http://127.0.0.1:8765/commands/advance-time \
+  -H 'Content-Type: application/json' \
+  -d '{"seconds":300}'
+```
+
+模拟当前同桌拍了拍我：
+
+```bash
+curl -X POST http://127.0.0.1:8765/commands/receive-nudge
+```
+
+服务只监听 `127.0.0.1`；未设置 `ZAICHANG_DEMO_CONTROL_URL` 时，App 不会启动指令轮询。

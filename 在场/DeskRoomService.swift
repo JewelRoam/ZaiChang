@@ -5,11 +5,13 @@ enum DeskRoomServiceError: Error, Equatable {
 }
 
 protocol DeskRoomServicing {
+    var demoInviteCode: String { get }
     func createRoom() async throws -> DeskRoom
     func joinRoom(inviteCode: String) async throws -> DeskRoom
 }
 
 struct MockDeskRoomService: DeskRoomServicing {
+    let demoInviteCode = "DEMO-ROOM"
     private let roomID = UUID(uuidString: "DE5C0000-0000-0000-0000-000000000001")!
 
     func createRoom() async throws -> DeskRoom {

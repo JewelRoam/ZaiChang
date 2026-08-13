@@ -13,7 +13,12 @@ enum DeskPetGenerationState: Equatable {
 
 enum DeskPetNudgeFeedbackKind: Equatable {
     case sent
+    case received
     case unavailable
+
+    var animatesDeskPet: Bool {
+        self != .unavailable
+    }
 }
 
 struct DeskPetNudgeFeedback: Equatable, Identifiable {

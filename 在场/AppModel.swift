@@ -139,6 +139,7 @@ enum AppSheet: String, Identifiable {
     case scenes
     case sceneWorkshop
     case context
+    case settings
 
     var id: String { rawValue }
 }
@@ -235,6 +236,7 @@ final class AppModel: ObservableObject {
     let voiceRecorder: VoiceRecorderController
     let memory: MemoryController
     let deskPet: DeskPetController
+    let ownDeskPet: OwnDeskPetController
     let sceneGenerator: any SceneGenerating
     private let scenePersistence: ScenePersistence
     private let todoDefaults: UserDefaults
@@ -272,6 +274,7 @@ final class AppModel: ObservableObject {
         self.focusSessionService = focusSessionService ?? MockFocusSessionService()
         self.sceneGenerator = sceneGenerator ?? HybridSceneGenerator()
         deskPet = DeskPetController(generator: deskPetGenerator ?? HybridDeskPetGenerator())
+        ownDeskPet = OwnDeskPetController(generator: deskPetGenerator ?? HybridDeskPetGenerator())
         voiceRecorder = VoiceRecorderController(ambientAudio: audio)
         memory = MemoryController()
         timerTask = Task { @MainActor [weak self] in

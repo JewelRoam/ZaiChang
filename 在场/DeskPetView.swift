@@ -142,8 +142,7 @@ struct DeskPetSection: View {
 }
 
 /// Provides one photo entry point while keeping platform-native sources behind it.
-struct DeskPetPhotoPicker<Content: View>: View {
-    @Binding var selection: PhotosPickerItem?
+struct DeskPetPhotoPicker<Content: View>: View {    @Binding var selection: PhotosPickerItem?
     let onData: (Data) -> Void
     @ViewBuilder let label: () -> Content
 
@@ -292,6 +291,7 @@ struct DeskPetOverlay: View {
 
 struct DeskPetPairOverlay: View {
     @ObservedObject var controller: DeskPetController
+    @ObservedObject var ownController: OwnDeskPetController
     let partnerProfile: DeskPetProfile?
     let partnerName: String?
     let onPartnerDoubleTap: () -> Void
@@ -300,7 +300,7 @@ struct DeskPetPairOverlay: View {
         GeometryReader { geo in
             let petSize = min(max(min(geo.size.width, geo.size.height) * 0.20, 76), 176)
             HStack(alignment: .bottom, spacing: max(8, petSize * 0.10)) {
-                BuiltInOwnDeskPetView(size: petSize)
+                BuiltInOwnDeskPetView(controller: ownController, size: petSize)
                 if let partnerProfile {
                     InteractiveDeskPetView(
                         controller: controller,
@@ -321,11 +321,12 @@ struct DeskPetPairOverlay: View {
 }
 
 private struct BuiltInOwnDeskPetView: View {
+    @ObservedObject var controller: OwnDeskPetController
     let size: CGFloat
 
     var body: some View {
         Group {
-            if let data = Self.imageData {
+            if let data = controller.displayImageData {
                 DeskPetImage(data: data)
             } else {
                 PixelDeskPetSilhouette(
@@ -339,11 +340,6 @@ private struct BuiltInOwnDeskPetView: View {
         .shadow(color: .black.opacity(0.34), radius: 8, y: 4)
         .autonomousJump(size: size)
         .accessibilityLabel("我的桌宠")
-    }
-
-    private static var imageData: Data? {
-        guard let url = Bundle.main.url(forResource: "own-desk-pet", withExtension: "png") else { return nil }
-        return try? Data(contentsOf: url)
     }
 }
 

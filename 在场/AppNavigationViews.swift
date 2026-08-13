@@ -50,6 +50,7 @@ struct SidebarView: View {
             SidebarButton(symbol: "book.closed", title: "记忆") { model.activeSheet = .memoryArchive }
             Spacer()
             SidebarButton(symbol: "photo.on.rectangle.angled", title: "场景") { model.activeSheet = .scenes }
+            SidebarButton(symbol: "gearshape", title: "设置") { model.activeSheet = .settings }
         }
 #if os(macOS)
         .padding(.top, 44)

@@ -114,6 +114,49 @@ struct APIConfiguration: Equatable {
     private static func provider(_ value: String?) -> Provider? {
         value.flatMap { Provider(rawValue: $0.lowercased()) }
     }
+
+    // MARK: - Serialization
+
+    var yamlString: String {
+        func quote(_ value: String) -> String {
+            "\"\(value.replacingOccurrences(of: "\"", with: "\\\""))\""
+        }
+        var lines: [String] = []
+        lines.append("# Managed by the in-app settings page.")
+        lines.append("")
+        lines.append("text:")
+        lines.append("  provider: \(quote(text.provider.rawValue))")
+        lines.append("  api_key: \(quote(text.apiKey))")
+        lines.append("  base_url: \(quote(text.baseURL))")
+        lines.append("  model: \(quote(text.model))")
+        lines.append("")
+        lines.append("image:")
+        lines.append("  provider: \(quote(image.provider.rawValue))")
+        lines.append("  api_key: \(quote(image.apiKey))")
+        lines.append("  base_url: \(quote(image.baseURL))")
+        lines.append("  endpoint: \(quote(image.endpoint))")
+        lines.append("  model: \(quote(image.model))")
+        lines.append("  size: \(quote(image.size))")
+        lines.append("  scene_model: \(quote(image.sceneModel))")
+        lines.append("  scene_size: \(quote(image.sceneSize))")
+        lines.append("")
+        lines.append("matting:")
+        lines.append("  provider: \(quote(matting.provider.rawValue))")
+        lines.append("  api_key: \(quote(matting.apiKey))")
+        lines.append("  endpoint: \(quote(matting.endpoint))")
+        lines.append("")
+        return lines.joined(separator: "\n")
+    }
+
+    /// Persists the configuration to the writable Application Support location.
+    func save() throws {
+        let url = Self.defaultURL
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try yamlString.write(to: url, atomically: true, encoding: .utf8)
+    }
 }
 
 /// Small YAML scalar reader for this deliberately scalar-only configuration.

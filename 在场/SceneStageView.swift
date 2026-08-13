@@ -26,64 +26,42 @@ struct SceneStageView: View {
         ZStack {
             SceneNativeRenderer(model: model)
 
-            if model.activeFocusSession == nil {
-                VStack(alignment: .leading, spacing: 7) {
-                Text(model.selectedScene.eyebrow)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Palette.amberSoft)
-                    .textCase(.uppercase)
-                Text(model.selectedScene.headline)
-                    .font(.system(size: layout == .compact ? 22 : 26, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: layout == .compact ? 255 : nil, alignment: .leading)
+            VStack(alignment: .leading, spacing: 7) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Text(model.selectedScene.eyebrow)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Palette.amberSoft)
+                        .textCase(.uppercase)
+                    Text(model.selectedScene.headline)
+                        .font(.system(size: layout == .compact ? 22 : 26, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: layout == .compact ? 255 : nil, alignment: .leading)
+                    if let room = model.currentDeskRoom {
+                        Text(room.code)
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(Palette.muted)
+                    }
                 }
-                .shadow(color: .black.opacity(0.55), radius: 8, y: 2)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(.top, 30)
-            .padding(.leading, 28)
-                .allowsHitTesting(false)
-            }
 
-            if model.activeFocusSession != nil {
-                Button {
-                    endFocusConfirmationPresented = true
-                } label: {
-                    Label("结束专注", systemImage: "stop.fill")
-                        .font(.system(size: 15, weight: .bold))
-                        .padding(.horizontal, 18)
-                        .frame(minHeight: 48)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(Palette.amber)
-                .foregroundStyle(Color.black)
-                .accessibilityLabel("结束专注")
-                .padding(.top, 28)
-                .padding(.leading, 28)
-            } else if let task = model.activeFocusTask {
-                HStack(spacing: 10) {
-                    Label(task.title, systemImage: "checklist")
-                        .font(.system(size: 11, weight: .semibold))
-                        .lineLimit(2)
-
+                if model.activeFocusSession != nil {
                     Button {
                         endFocusConfirmationPresented = true
                     } label: {
                         Label("结束专注", systemImage: "stop.fill")
-                            .font(.system(size: 10, weight: .semibold))
-                            .adaptiveHitTarget(minHeight: 32)
+                            .font(.system(size: 13, weight: .bold))
+                            .padding(.horizontal, 15)
+                            .frame(minHeight: 42)
                     }
-                    .buttonStyle(ZaichangPlainButtonStyle())
+                    .buttonStyle(.borderedProminent)
+                    .tint(Palette.amber)
+                    .foregroundStyle(Color.black)
+                    .accessibilityLabel("结束专注")
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(.black.opacity(0.66))
-                .overlay(RoundedRectangle(cornerRadius: 7).stroke(.white.opacity(0.16)))
-                .clipShape(RoundedRectangle(cornerRadius: 7))
-                .frame(maxWidth: layout == .compact ? 310 : 420, alignment: .leading)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .padding(.top, layout == .compact ? 104 : 102)
-                .padding(.leading, 28)
             }
+            .shadow(color: .black.opacity(0.55), radius: 8, y: 2)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.top, 30)
+            .padding(.leading, 28)
 
             if let partner = model.currentDeskPartner {
                 Button {

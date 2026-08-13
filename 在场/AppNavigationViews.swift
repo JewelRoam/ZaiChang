@@ -45,26 +45,11 @@ struct SidebarView: View {
     var body: some View {
         VStack(spacing: 6) {
             SidebarButton(symbol: "house", title: "在场", isActive: true) {}
-            SidebarButton(symbol: "person.2", title: "同桌") { model.activeSheet = .desk }
+            SidebarButton(symbol: "person.2", title: "当前房间") { model.activeSheet = .desk }
             SidebarButton(symbol: "record.circle", title: "留声") { model.activeSheet = .voice }
             SidebarButton(symbol: "book.closed", title: "记忆") { model.activeSheet = .memory }
             Spacer()
             SidebarButton(symbol: "photo.on.rectangle.angled", title: "场景") { model.activeSheet = .scenes }
-            Button { model.copyDeskCode() } label: {
-                VStack(spacing: 3) {
-                    Image(systemName: "person.2.badge.key")
-                        .font(.system(size: 13, weight: .medium))
-                    Text(model.shareableDeskCode)
-                        .font(.system(size: 8, weight: .semibold, design: .monospaced))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.55)
-                }
-                .foregroundStyle(Palette.amberSoft)
-                .frame(width: 56, height: 40)
-            }
-            .buttonStyle(ZaichangPlainButtonStyle())
-            .help("点击复制同桌码")
-            .accessibilityLabel("当前同桌码：\(model.shareableDeskCode)")
         }
 #if os(macOS)
         .padding(.top, 44)

@@ -424,12 +424,15 @@ final class FloatingDeskPetWindow: NSObject {
     // MARK: - Geometry
 
     private func petSizeFromMainWindow() -> CGFloat {
+        // 优先沿用场景内桌宠的实际尺寸，保证最小化前后大小一致
+        if let size = controller?.partnerPetSize { return size }
+
         guard let window = mainWindow else { return 136 }
         let sceneWidth = window.frame.width
             - LayoutMetrics.sidebarWidth
             - LayoutMetrics.contextPanelWidth
-        let size = min(sceneWidth, window.frame.height) * 0.22
-        return min(max(size, 80), 200)
+        let size = min(sceneWidth, window.frame.height) * 0.20
+        return min(max(size, 76), 176)
     }
 
     private func petScreenPosition(petSize: CGFloat) -> NSPoint {

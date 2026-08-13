@@ -306,13 +306,16 @@ struct DeskPetPairOverlay: View {
                         controller: controller,
                         profile: partnerProfile,
                         size: petSize,
-                        onDoubleTap: onPartnerDoubleTap
+                        onDoubleTap: onPartnerDoubleTap,
+                        autonomousJump: true
                     )
                 } else if let partnerName {
                     PartnerDeskPetPlaceholder(name: partnerName, size: petSize)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            .onAppear { controller.updatePartnerPetSize(petSize) }
+            .onChange(of: petSize) { _, newValue in controller.updatePartnerPetSize(newValue) }
         }
     }
 }
@@ -334,6 +337,7 @@ private struct BuiltInOwnDeskPetView: View {
         }
         .frame(width: size, height: size)
         .shadow(color: .black.opacity(0.34), radius: 8, y: 4)
+        .autonomousJump(size: size)
         .accessibilityLabel("我的桌宠")
     }
 
@@ -353,7 +357,40 @@ private struct PartnerDeskPetPlaceholder: View {
             secondary: Color(red: 0.68, green: 0.76, blue: 0.55),
             size: size
         )
+        .autonomousJump(size: size)
         .accessibilityLabel("\(name)的默认桌宠")
+    }
+}
+
+/// 让桌宠每隔 6~13 秒随机跳一跳。每个视图各自计时，互相独立。
+private struct AutonomousJumpModifier: ViewModifier {
+    let size: CGFloat
+    @State private var jumpTrigger = 0
+
+    func body(content: Content) -> some View {
+        content
+            .keyframeAnimator(initialValue: 0.0, trigger: jumpTrigger) { view, offsetY in
+                view.offset(y: offsetY)
+            } keyframes: { _ in
+                KeyframeTrack {
+                    SpringKeyframe(-size * 0.32, duration: 0.24, spring: .bouncy)
+                    SpringKeyframe(0, duration: 0.32, spring: .bouncy)
+                }
+            }
+            .task {
+                while !Task.isCancelled {
+                    let delay = 6.0 + Double.random(in: 0...7)
+                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                    if Task.isCancelled { break }
+                    jumpTrigger += 1
+                }
+            }
+    }
+}
+
+extension View {
+    func autonomousJump(size: CGFloat) -> some View {
+        modifier(AutonomousJumpModifier(size: size))
     }
 }
 

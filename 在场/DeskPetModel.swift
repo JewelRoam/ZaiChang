@@ -450,6 +450,9 @@ final class DeskPetController: ObservableObject {
     @Published private(set) var partnerScenePosition: CGPoint?
     /// Only a pet owned by the partner in the current room may enter the scene or desktop.
     @Published private(set) var activePartnerID: DeskPartner.ID?
+    /// The partner pet's rendered size in the scene. The floating window reuses it so the
+    /// pet keeps the exact same size when the window is miniaturized.
+    @Published private(set) var partnerPetSize: CGFloat?
 
     private let generator: any DeskPetGenerating
     private let persistence: DeskPetPersistence
@@ -509,6 +512,11 @@ final class DeskPetController: ObservableObject {
 
     func movePartnerPet(to position: CGPoint) {
         partnerScenePosition = position
+    }
+
+    func updatePartnerPetSize(_ size: CGFloat) {
+        guard partnerPetSize != size else { return }
+        partnerPetSize = size
     }
 
     func prepare(for partner: DeskPartner?) {

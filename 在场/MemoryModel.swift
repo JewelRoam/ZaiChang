@@ -156,6 +156,16 @@ final class MemoryController: ObservableObject {
     func markDelivered(_ card: MemoryDraft) { updateCard(card) }
     func updateCard(_ card: MemoryDraft) { cards.removeAll { $0.id == card.id }; cards.insert(card, at: 0); persist() }
 
+    /// 已确认和已归档的记忆卡片，按创建时间从新到旧排列，供历史列表展示。
+    var history: [MemoryDraft] {
+        cards.sorted { $0.createdAt > $1.createdAt }
+    }
+
+    func deleteCard(_ card: MemoryDraft) {
+        cards.removeAll { $0.id == card.id }
+        persist()
+    }
+
     private func persist() {
         try? persistence.save(drafts: drafts, cards: cards)
     }

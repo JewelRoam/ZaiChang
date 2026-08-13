@@ -241,8 +241,8 @@ struct AppModelTests {
     func presenceControlsTimer() {
         let model = AppModel()
 
-        model.setPresence(.quiet)
-        #expect(model.presence == .quiet)
+        model.setPresence(.away)
+        #expect(model.presence == .away)
         #expect(!model.timerRunning)
 
         model.setPresence(.focus)
@@ -501,7 +501,7 @@ struct AppModelTests {
         model.performSuggestion(suggestion.id)
 
         #expect(model.activeSuggestion == nil)
-        #expect(model.presence == .rest)
+        #expect(model.presence == .away)
     }
 
     @Test("开始同桌专注会同步 Todo、时长和随机场景")

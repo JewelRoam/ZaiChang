@@ -45,14 +45,14 @@ struct SceneStageView: View {
             if let task = model.activeFocusTask {
                 HStack(spacing: 10) {
                     Label(task.title, systemImage: "checklist")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .lineLimit(2)
 
                     Button {
                         endFocusConfirmationPresented = true
                     } label: {
                         Label("结束专注", systemImage: "stop.fill")
-                            .font(.system(size: 10, weight: .semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .adaptiveHitTarget(minHeight: 32)
                     }
                     .buttonStyle(ZaichangPlainButtonStyle())
@@ -375,7 +375,7 @@ private struct SceneControlsView: View {
             .buttonStyle(ZaichangPlainButtonStyle())
             .popover(isPresented: $presencePickerPresented, arrowEdge: .bottom) {
                 VStack(spacing: 0) {
-                    ForEach(PresenceMode.allCases) { mode in
+                    ForEach(PresenceMode.selectable) { mode in
                         Button {
                             model.setPresence(mode)
                             presencePickerPresented = false
@@ -398,7 +398,7 @@ private struct SceneControlsView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(ZaichangPlainButtonStyle())
-                        if mode != PresenceMode.allCases.last {
+                        if mode != PresenceMode.selectable.last {
                             Divider().overlay(Palette.line)
                         }
                     }
@@ -480,7 +480,7 @@ private struct SceneControlsView: View {
     private var compactControls: some View {
         HStack(spacing: 8) {
             Menu {
-                ForEach(PresenceMode.allCases) { mode in
+                ForEach(PresenceMode.selectable) { mode in
                     Button {
                         model.setPresence(mode)
                     } label: {

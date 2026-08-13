@@ -35,6 +35,10 @@ enum PresenceMode: String, CaseIterable, Identifiable {
         case .away: "door.left.hand.open"
         }
     }
+
+    /// 用户可以在界面上主动切换的状态。`quiet` 和 `rest` 仍保留在模型里
+    /// 供渲染和历史数据使用，但不再作为可选项呈现。
+    static let selectable: [PresenceMode] = [.focus, .away]
 }
 
 struct FocusTask: Identifiable {
@@ -758,7 +762,7 @@ final class AppModel: ObservableObject {
         case .openVoiceRecorder:
             activeSheet = .voice
         case .beginRest:
-            setPresence(.rest)
+            setPresence(.away)
         }
         refreshSuggestions()
     }

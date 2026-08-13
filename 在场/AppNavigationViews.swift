@@ -7,7 +7,7 @@ struct CompactNavigationBar: View {
         HStack(spacing: 2) {
             CompactNavigationButton(symbol: "house.fill", title: "在场", isActive: true) {}
             CompactNavigationButton(symbol: "person.2", title: "同桌") { model.activeSheet = .desk }
-            CompactNavigationButton(symbol: "record.circle", title: "留声") { model.activeSheet = .voice }
+            CompactNavigationButton(symbol: "record.circle", title: "留声") { model.activeSheet = .phonograph }
             CompactNavigationButton(symbol: "chart.bar", title: "此刻") { model.activeSheet = .context }
             CompactNavigationButton(symbol: "photo.on.rectangle", title: "场景") { model.activeSheet = .scenes }
         }
@@ -46,8 +46,8 @@ struct SidebarView: View {
         VStack(spacing: 6) {
             SidebarButton(symbol: "house", title: "在场", isActive: true) {}
             SidebarButton(symbol: "person.2", title: "同桌") { model.activeSheet = .desk }
-            SidebarButton(symbol: "record.circle", title: "留声") { model.activeSheet = .voice }
-            SidebarButton(symbol: "book.closed", title: "记忆") { model.activeSheet = .memory }
+            SidebarButton(symbol: "record.circle", title: "留声") { model.activeSheet = .phonograph }
+            SidebarButton(symbol: "book.closed", title: "记忆") { model.activeSheet = .memoryArchive }
             Spacer()
             SidebarButton(symbol: "photo.on.rectangle.angled", title: "场景") { model.activeSheet = .scenes }
         }

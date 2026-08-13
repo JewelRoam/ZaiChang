@@ -7,7 +7,6 @@ struct VoiceSheet: View {
     @ObservedObject var recorder: VoiceRecorderController
     @ObservedObject var memory: MemoryController
     @Environment(\.dismiss) private var dismiss
-    @State private var delivery: VoiceDelivery = .focusEnd
 
     var body: some View {
         SheetContainer(eyebrow: "留声机", title: "把这句话留到合适的时候", dismiss: dismiss) {
@@ -68,30 +67,19 @@ struct VoiceSheet: View {
             .overlay(alignment: .top) { Divider().overlay(Palette.line) }
             .overlay(alignment: .bottom) { Divider().overlay(Palette.line) }
 
-            VStack(alignment: .leading, spacing: 10) {
-                Text("让它什么时候抵达？").font(.system(size: 12, weight: .semibold))
-                ForEach(VoiceDelivery.allCases) { option in
-                    Button {
-                        delivery = option
-                    } label: {
-                        Label(
-                            "\(option.title) · \(option.detail)",
-                            systemImage: delivery == option ? "checkmark.circle.fill" : "circle"
-                        )
-                        .adaptiveFullWidthHitTarget(minHeight: 36)
-                    }
-                    .buttonStyle(ZaichangPlainButtonStyle())
-                }
-            }
-            .font(.system(size: 11))
-            .padding(.vertical, 18)
-
             Button {
-                if let note = recorder.saveDraft(delivery: delivery) {
+                if let note = recorder.saveDraft() {
                     memory.attachVoiceNote(note.id)
+                    memory.updateVoiceAttachment(
+                        noteID: note.id,
+                        filename: note.filename,
+                        duration: note.duration,
+                        createdAt: note.createdAt,
+                        delivery: note.delivery
+                    )
                     dismiss()
                     model.showToast("语音已保存，继续整理为记忆卡片")
-                    model.activeSheet = .memory
+                    model.activeSheet = .phonograph
                 }
             } label: {
                 Label("放进留声机", systemImage: "paperplane")

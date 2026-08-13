@@ -241,8 +241,8 @@ struct AppModelTests {
     func presenceControlsTimer() {
         let model = AppModel()
 
-        model.setPresence(.quiet)
-        #expect(model.presence == .quiet)
+        model.setPresence(.away)
+        #expect(model.presence == .away)
         #expect(!model.timerRunning)
 
         model.setPresence(.focus)
@@ -282,8 +282,8 @@ struct AppModelTests {
         let added = model.addTask(title: "  写完演示说明  ")
 
         #expect(added)
-        #expect(model.tasks.last?.title == "写完演示说明")
-        #expect(model.tasks.last?.isCompleted == false)
+        #expect(model.tasks.first?.title == "写完演示说明")
+        #expect(model.tasks.first?.isCompleted == false)
     }
 
     @Test("桌上事项拒绝重复内容并限制为五项")
@@ -501,7 +501,7 @@ struct AppModelTests {
         model.performSuggestion(suggestion.id)
 
         #expect(model.activeSuggestion == nil)
-        #expect(model.presence == .rest)
+        #expect(model.presence == .away)
     }
 
     @Test("开始同桌专注会同步 Todo、时长和随机场景")

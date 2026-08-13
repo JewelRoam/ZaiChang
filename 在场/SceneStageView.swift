@@ -26,47 +26,39 @@ struct SceneStageView: View {
         ZStack {
             SceneNativeRenderer(model: model)
 
-            VStack(alignment: .leading, spacing: 7) {
-                Text(model.selectedScene.eyebrow)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Palette.amberSoft)
-                    .textCase(.uppercase)
-                Text(model.selectedScene.headline)
-                    .font(.system(size: layout == .compact ? 22 : 26, weight: .semibold))
+            VStack(alignment: .leading, spacing: 10) {
+                SceneStageHeader(
+                    eyebrow: model.selectedScene.eyebrow,
+                    headline: model.selectedScene.headline,
+                    roomCode: model.currentDeskRoom?.code,
+                    layout: layout
+                )
+
+                if model.activeFocusSession != nil {
+                    Button {
+                        endFocusConfirmationPresented = true
+                    } label: {
+                        Label("结束专注", systemImage: "stop.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .padding(.horizontal, 10)
+                            .frame(minHeight: 32)
+                    }
+                    .buttonStyle(ZaichangPlainButtonStyle())
                     .foregroundStyle(.white)
-                    .frame(maxWidth: layout == .compact ? 255 : nil, alignment: .leading)
+                    .background(.black.opacity(0.28))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(.white.opacity(0.58), lineWidth: 1)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .adaptiveHitTarget(minHeight: 32)
+                    .accessibilityLabel("结束专注")
+                }
             }
             .shadow(color: .black.opacity(0.55), radius: 8, y: 2)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(.top, 30)
             .padding(.leading, 28)
-            .allowsHitTesting(false)
-
-            if let task = model.activeFocusTask {
-                HStack(spacing: 10) {
-                    Label(task.title, systemImage: "checklist")
-                        .font(.system(size: 11, weight: .semibold))
-                        .lineLimit(2)
-
-                    Button {
-                        endFocusConfirmationPresented = true
-                    } label: {
-                        Label("结束专注", systemImage: "stop.fill")
-                            .font(.system(size: 10, weight: .semibold))
-                            .adaptiveHitTarget(minHeight: 32)
-                    }
-                    .buttonStyle(ZaichangPlainButtonStyle())
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(.black.opacity(0.66))
-                .overlay(RoundedRectangle(cornerRadius: 7).stroke(.white.opacity(0.16)))
-                .clipShape(RoundedRectangle(cornerRadius: 7))
-                .frame(maxWidth: layout == .compact ? 310 : 420, alignment: .leading)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .padding(.top, layout == .compact ? 104 : 102)
-                .padding(.leading, 28)
-            }
 
             if let partner = model.currentDeskPartner {
                 Button {
@@ -232,6 +224,47 @@ private struct PartnerPopover: View {
     }
 }
 
+private struct SceneStageHeader: View {
+    let eyebrow: String
+    let headline: String
+    let roomCode: String?
+    let layout: SceneStageLayout
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(eyebrow)
+                    .eyebrowStyle()
+                Spacer(minLength: 8)
+                if let roomCode {
+                    Text("房间 \(roomCode)")
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundStyle(Palette.muted)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.white.opacity(0.07), in: Capsule())
+                        .overlay(Capsule().stroke(.white.opacity(0.10), lineWidth: 1))
+                }
+            }
+
+            Text(headline)
+                .font(.system(size: layout == .compact ? 20 : 24, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(.white.opacity(0.16), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.20), radius: 14, y: 4)
+        .frame(maxWidth: layout == .compact ? 310 : 380, alignment: .leading)
+    }
+}
+
 private struct PopoverAction: View {
     let title: String
     let symbol: String
@@ -378,7 +411,7 @@ private struct SceneControlsView: View {
             .buttonStyle(ZaichangPlainButtonStyle())
             .popover(isPresented: $presencePickerPresented, arrowEdge: .bottom) {
                 VStack(spacing: 0) {
-                    ForEach(PresenceMode.allCases) { mode in
+                    ForEach(PresenceMode.selectable) { mode in
                         Button {
                             model.setPresence(mode)
                             presencePickerPresented = false
@@ -401,7 +434,7 @@ private struct SceneControlsView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(ZaichangPlainButtonStyle())
-                        if mode != PresenceMode.allCases.last {
+                        if mode != PresenceMode.selectable.last {
                             Divider().overlay(Palette.line)
                         }
                     }
@@ -483,7 +516,7 @@ private struct SceneControlsView: View {
     private var compactControls: some View {
         HStack(spacing: 8) {
             Menu {
-                ForEach(PresenceMode.allCases) { mode in
+                ForEach(PresenceMode.selectable) { mode in
                     Button {
                         model.setPresence(mode)
                     } label: {

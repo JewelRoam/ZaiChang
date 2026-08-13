@@ -35,6 +35,10 @@ enum PresenceMode: String, CaseIterable, Identifiable {
         case .away: "door.left.hand.open"
         }
     }
+
+    /// 用户可以在界面上主动切换的状态。`quiet` 和 `rest` 仍保留在模型里
+    /// 供渲染和历史数据使用，但不再作为可选项呈现。
+    static let selectable: [PresenceMode] = [.focus, .away]
 }
 
 struct FocusTask: Identifiable {
@@ -130,7 +134,8 @@ private extension PresenceSuggestionCategory {
 enum AppSheet: String, Identifiable {
     case desk
     case voice
-    case memory
+    case phonograph
+    case memoryArchive
     case scenes
     case sceneWorkshop
     case context
@@ -289,6 +294,10 @@ final class AppModel: ObservableObject {
     var completedTaskCount: Int { tasks.filter(\.isCompleted).count }
     var canAddTask: Bool { tasks.count < Self.maximumTaskCount }
     var incompleteTasks: [FocusTask] { tasks.filter { !$0.isCompleted } }
+    var orderedTasks: [FocusTask] {
+        tasks.filter { !$0.isCompleted } + tasks.filter(\.isCompleted)
+    }
+    var shareableDeskCode: String { currentDeskRoom?.code ?? deskRoomService.demoInviteCode }
     private var allTasksCompleted: Bool { !tasks.isEmpty && tasks.allSatisfy(\.isCompleted) }
 
     var currentDeskRoom: DeskRoom? {
@@ -298,8 +307,18 @@ final class AppModel: ObservableObject {
 
     var currentDeskPartner: DeskPartner? { currentDeskRoom?.partner }
     var activeFocusTask: FocusTask? {
-        guard let taskID = activeFocusSession?.taskID else { return nil }
+        guard let taskID = activeFocusSession?.taskIDs.first else { return nil }
         return tasks.first { $0.id == taskID }
+    }
+
+    var activeFocusTasks: [FocusTask] {
+        guard let taskIDs = activeFocusSession?.taskIDs else { return [] }
+        return taskIDs.compactMap { taskID in tasks.first { $0.id == taskID } }
+    }
+
+    var activeFocusSummary: String? {
+        let titles = activeFocusTasks.map(\.title) + [activeFocusSession?.customTaskTitle].compactMap { $0 }
+        return titles.isEmpty ? nil : titles.joined(separator: " · ")
     }
     var deskActionTitle: String { currentDeskRoom == nil ? "加入同桌" : "邀请同桌" }
 
@@ -510,19 +529,33 @@ final class AppModel: ObservableObject {
 
     @discardableResult
     func beginDeskFocus(durationMinutes: Int, taskID: FocusTask.ID) -> Bool {
+        beginDeskFocus(durationMinutes: durationMinutes, taskIDs: [taskID], customTaskTitle: nil, sceneID: nil)
+    }
+
+    @discardableResult
+    func beginDeskFocus(
+        durationMinutes: Int,
+        taskIDs: Set<FocusTask.ID>,
+        customTaskTitle rawCustomTaskTitle: String?,
+        sceneID: RoomScene.ID?
+    ) -> Bool {
+        let selectableTaskIDs = Set(incompleteTasks.map(\.id))
         guard let room = currentDeskRoom,
-              let task = tasks.first(where: { $0.id == taskID && !$0.isCompleted }) else {
-            return false
-        }
+              taskIDs.isSubset(of: selectableTaskIDs),
+              sceneID.map({ selectedID in scenes.contains(where: { $0.id == selectedID }) }) ?? true else { return false }
+        let customTaskTitle = rawCustomTaskTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedCustomTaskTitle = customTaskTitle?.isEmpty == false ? customTaskTitle : nil
 
         do {
             let session = try focusSessionService.startSession(
                 roomID: room.id,
                 configuration: FocusSessionConfiguration(
                     durationMinutes: durationMinutes,
-                    taskID: task.id
+                    taskIDs: Array(taskIDs),
+                    customTaskTitle: normalizedCustomTaskTitle,
+                    sceneID: sceneID
                 ),
-                candidateScenes: RoomSceneCatalog.builtIn
+                candidateScenes: scenes
             )
             guard let scene = scenes.first(where: { $0.id == session.sceneID }) else { return false }
 
@@ -587,7 +620,7 @@ final class AppModel: ObservableObject {
             return false
         }
 
-        tasks.append(FocusTask(title: title, isCompleted: false))
+        tasks.insert(FocusTask(title: title, isCompleted: false), at: 0)
         invalidateDailyTodoSuggestionIfNeeded()
         showToast("已经放到桌上")
         return true
@@ -608,7 +641,7 @@ final class AppModel: ObservableObject {
     }
 
     func deleteTask(_ taskID: FocusTask.ID) {
-        guard activeFocusSession?.taskID != taskID else { return }
+        guard activeFocusSession?.taskIDs.contains(taskID) != true else { return }
         tasks.removeAll { $0.id == taskID }
         invalidateDailyTodoSuggestionIfNeeded()
     }
@@ -700,7 +733,7 @@ final class AppModel: ObservableObject {
     }
 
     func copyDeskCode() {
-        guard let code = currentDeskRoom?.code else { return }
+        let code = shareableDeskCode
         cancelSuggestions(in: .waitingForPartner)
         refreshSuggestions()
         ClipboardClient.writeText(code)
@@ -758,7 +791,7 @@ final class AppModel: ObservableObject {
         case .openVoiceRecorder:
             activeSheet = .voice
         case .beginRest:
-            setPresence(.rest)
+            setPresence(.away)
         }
         refreshSuggestions()
     }
@@ -828,12 +861,38 @@ final class AppModel: ObservableObject {
                 primaryOption: PresenceSuggestionOption(title: "打开留声机", action: .openVoiceRecorder),
                 context: .focusCompleted(partnerID: partner.id)
             ))
+            memory.makeDraft(
+                title: "\(partner.name)这一段",
+                mood: .warm,
+                observation: "这一段活动已经结束，适合把刚刚发生的细节留下来。",
+                keyMoment: "结束时的那一刻",
+                delivery: .activityEnd,
+                sourceEvent: .activityEnded,
+                sourceActivityID: session.id,
+                creatorName: "我",
+                participantNames: [partner.name],
+                visibility: .shared,
+                resourceReferences: lastActivityEndedEvent.map { [MemoryResourceReference(kind: "activityEndedEvent", value: $0.id.uuidString)] } ?? []
+            )
         } else {
             offerSuggestion(PresenceSuggestion(
                 message: "这一段已经完成，先休息一会儿。",
                 primaryOption: PresenceSuggestionOption(title: "休息一下", action: .beginRest),
                 context: .focusCompleted(partnerID: nil)
             ))
+            memory.makeDraft(
+                title: "这一段活动",
+                mood: .quiet,
+                observation: "这一段活动已经结束。",
+                keyMoment: "结束时的那一刻",
+                delivery: .activityEnd,
+                sourceEvent: .activityEnded,
+                sourceActivityID: session.id,
+                creatorName: "我",
+                participantNames: [],
+                visibility: .shared,
+                resourceReferences: lastActivityEndedEvent.map { [MemoryResourceReference(kind: "activityEndedEvent", value: $0.id.uuidString)] } ?? []
+            )
         }
     }
 
@@ -850,6 +909,7 @@ final class AppModel: ObservableObject {
         focusSessionStarted = false
         cancelSuggestions(in: .focusPaused, .timerReset)
         lastActivityEndedEvent = focusSessionService.endSession(session, reason: reason)
+        memory.deliverCards(for: .activityEnded, activityID: session.id)
 
         if let partner = currentDeskPartner {
             offerSuggestion(PresenceSuggestion(
@@ -926,6 +986,17 @@ final class AppModel: ObservableObject {
         let day = Self.currentDayKey()
         guard !dailyTodoSuggestedDays.contains(day) else { return }
         dailyTodoSuggestedDays.insert(day)
+        memory.makeDraft(
+            title: "今日留声机",
+            mood: .bright,
+            observation: "今天的 Todo 已全部完成，可以把今天收尾成一张回忆卡。",
+            keyMoment: "今天全部完成的那一刻",
+            delivery: .archiveOnly,
+            sourceEvent: .dailyTodoCompleted,
+            creatorName: "我",
+            participantNames: [],
+            visibility: .shared
+        )
         offerSuggestion(PresenceSuggestion(
             message: "今天放在桌上的事都完成了。要用留声机记下今天吗？",
             primaryOption: PresenceSuggestionOption(title: "打开留声机", action: .openVoiceRecorder),

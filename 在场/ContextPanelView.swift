@@ -49,10 +49,10 @@ struct ContextPanelView: View {
 
                     VStack(spacing: 4) {
                         HStack {
-                            Text("放在桌上的事").font(.system(size: 13, weight: .semibold))
+                            Text("放在桌上的事").font(.system(size: 14, weight: .semibold))
                             Spacer()
                             Text("\(model.completedTaskCount) / \(model.tasks.count)")
-                                .font(.system(size: 10)).foregroundStyle(Palette.muted)
+                                .font(.system(size: 11)).foregroundStyle(Palette.muted)
                             Button(action: beginAddingTask) {
                                 Image(systemName: "plus")
                                     .font(.system(size: 11, weight: .semibold))
@@ -82,7 +82,7 @@ struct ContextPanelView: View {
                                 .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
                         }
 
-                        ForEach(model.tasks) { task in
+                        ForEach(model.orderedTasks) { task in
                             if editingTaskID == task.id {
                                 taskEditor(
                                     title: $editingTaskTitle,
@@ -170,7 +170,7 @@ struct ContextPanelView: View {
             .accessibilityLabel(task.isCompleted ? "标记为未完成" : "标记为已完成")
 
             Text(task.title)
-                .font(.system(size: 11))
+                .font(.system(size: 13))
                 .foregroundStyle(task.isCompleted ? Palette.muted : Palette.ink)
                 .strikethrough(task.isCompleted)
                 .lineLimit(2)
@@ -203,7 +203,7 @@ struct ContextPanelView: View {
         HStack(spacing: 6) {
             TextField(placeholder, text: title)
                 .textFieldStyle(.plain)
-                .font(.system(size: 11))
+                .font(.system(size: 13))
                 .focused($taskEditorFocused)
                 .submitLabel(.done)
                 .onSubmit(confirm)

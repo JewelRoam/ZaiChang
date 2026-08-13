@@ -81,11 +81,11 @@ extension View {
     }
 
     @ViewBuilder
-    func adaptiveSheetFrame() -> some View {
+    func adaptiveSheetFrame(maxWidth: CGFloat = LayoutMetrics.sheetMaxWidth) -> some View {
 #if os(macOS)
-        frame(width: LayoutMetrics.sheetMaxWidth)
+        frame(width: maxWidth)
 #else
-        frame(maxWidth: LayoutMetrics.sheetMaxWidth)
+        frame(maxWidth: maxWidth)
 #endif
     }
 

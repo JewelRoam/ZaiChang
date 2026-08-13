@@ -38,10 +38,9 @@ final class __UITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["准备这一段专注"].waitForExistence(timeout: 3))
         app.buttons["选择 Todo：补齐方案最后两页"].click()
-        app.buttons["随机场景并开始"].click()
+        app.buttons["开始这一段专注"].click()
 
-        XCTAssertTrue(app.staticTexts["补齐方案最后两页"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.buttons["结束专注"].exists)
+        XCTAssertTrue(app.buttons["结束专注"].waitForExistence(timeout: 3))
         XCTAssertFalse(app.buttons["重置计时器"].isEnabled)
     }
 
@@ -71,6 +70,8 @@ final class __UITests: XCTestCase {
     private func launchApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launch()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
+        XCTAssertTrue(app.buttons["同桌"].waitForExistence(timeout: 5))
         return app
     }
 
@@ -84,7 +85,7 @@ final class __UITests: XCTestCase {
         app.buttons["加入房间"].click()
         XCTAssertTrue(app.staticTexts["准备这一段专注"].waitForExistence(timeout: 3))
         app.buttons["选择 Todo：补齐方案最后两页"].click()
-        app.buttons["随机场景并开始"].click()
+        app.buttons["开始这一段专注"].click()
         XCTAssertTrue(app.buttons["结束专注"].waitForExistence(timeout: 3))
     }
 }

@@ -1,0 +1,2 @@
+docs/archived_pages/ZaiChang_demo_vid.mov filter=lfs diff=lfs merge=lfs -text
+docs/archived_pages/ZaiChang_ad_vid.mp4 filter=lfs diff=lfs merge=lfs -text

@@ -1,8 +1,93 @@
+<div align="center">
+
+<img src="./logo.jpg" alt="在场 Logo" width="180" />
+
 # 在场
 
-《在场》是一个同时支持 macOS、iOS 和 iPadOS 的 SwiftUI 项目。仓库不包含任何可用 API Key；AI 功能通过本机 `api.yaml` 配置。
+> 看不见彼此的时光，我也在陪着你。
+
+<p>
+  <img src="https://img.shields.io/badge/platform-macOS%20%2F%20iOS%20%2F%20iPadOS-6b7280?style=flat-square" />
+  <img src="https://img.shields.io/badge/UI-SwiftUI-0ea5e9?style=flat-square" />
+  <img src="https://img.shields.io/badge/style-pixel%20art-f59e0b?style=flat-square" />
+  <img src="https://img.shields.io/badge/AI-backstage-8b5cf6?style=flat-square" />
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/status-MVP-10b981?style=flat-square" />
+  <img src="https://img.shields.io/badge/presence-centered-ef4444?style=flat-square" />
+  <img src="https://img.shields.io/badge/desktop-first-111827?style=flat-square" />
+</p>
+
+</div>
+
+---
+
+## PART 01 · 项目概览
+
+《在场》是一套面向 macOS / iOS / iPadOS 的 SwiftUI 应用。它是一种常驻桌面的像素陪伴体验，把专注、同桌、留声、回忆收进同一套安静、温暖、不打扰的桌面空间；它不是把一切交给 AI，而是把 AI 放在后台，做时机识别、信息整理和行动建议，真正站在前台的始终是“人在场”的状态和关系。
+
+| 模块 | 说明 |
+| --- | --- |
+| 像素小屋 | 常驻桌面的主界面，承载场景、桌宠与状态变化。 |
+| 在场建议 | 在合适时机出现的轻量提示，只给可执行动作，不做聊天人格。 |
+| 同桌 | 通过邀请码进入同一间房间，查看彼此是否在场、专注或离开。 |
+| 留声机 | 支持文字 / 语音记录，按时送达。 |
+| 回忆 | 把已完成的留声卡片统一收纳。 |
+| 场景工坊 | 生成并管理不同氛围的背景场景。 |
+| 桌宠 | 通过照片生成陪伴层，叠在背景前方。 |
+
+这些页面素材来自早期的 React / JSX 展示页，已保留在 `docs/archived_pages/`，用于延续产品气质、排版和文案风格。
+
+## PART 02 · 实现方案
+
+这部分来自早期“实现方案页”的结构：左边讲产品，右边讲技术。
+
+### 产品原型
+
+- 像素小屋：把桌面变成一个能被感知的空间。
+- 同桌：让两个人进入同一间房间，但不用持续聊天。
+- 留声机：把文字和声音变成可等待、可送达的物件。
+- 回忆：把已完成的留声内容统一收纳。
+
+### 技术实现
+
+1. SwiftUI + SpriteKit 构建 macOS 窗口与像素场景。
+2. AVFoundation 负责录音与播放。
+3. 云端数据库 + 实时通信同步同桌状态。
+4. 小程序接收邀请、录制留声、查看好友状态。
+5. 本地持久化统一落在 Application Support。
+
+### 页面素材
+
+| 文件 | 对应内容 |
+| --- | --- |
+| `docs/archived_pages/2.jsx` | 实现方案页，包含产品原型 / 技术实现的双栏结构。 |
+| `docs/archived_pages/0.jsx` | 像素电视视频上传原型。 |
+
+## PART 03 · 效果展示
+
+这部分对应展示页的叙事方式：先讲功能，再展示图片和视频。
+
+### 产品功能
+
+| 功能 | 描述 |
+| --- | --- |
+| 像素小屋 | 常驻 Mac 桌面的像素小屋，可见角色、状态与房间变化，也能随时收起。 |
+| 在场 | 结合时间、日程与习惯，给出轻量提醒与行动建议。 |
+| 同桌 | 邀请好友进入同一间像素房间，各自学习工作，看到对方是否在场。 |
+| 留声机 | 录一段语音并设置送达时机，让声音成为可等待的物件。 |
+| 回忆 | 把留声卡片和后续语音整理成统一的共同记忆。 |
+
+### 展示素材
+
+- `docs/archived_pages/3.jsx`：更完整的产品展示页，包含功能卡片、相片 / 视频展示和技术步骤。
+- `docs/archived_pages/ZaiChang_demo_pics/`：历史演示截图。
+- 历史演示视频体积超过 GitHub 普通 Git 100MB 限制，后续需要启用 Git LFS 后再入库。
 
 ## 本地 API 配置
+
+仓库不包含可用 API Key。AI 能力通过本机 `api.yaml` 配置。
 
 ### 1. 创建私有配置
 
@@ -26,7 +111,7 @@ image:
   provider: dashscope
   api_key: "YOUR_DASHSCOPE_API_KEY"
   base_url: ""
-  endpoint: https://your-dashscope-workspace.example/api/v1/services/aigc/multimodal-generation/generation
+  endpoint: https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
   desk_pet_model: qwen-image-edit-plus
   desk_pet_size: 1024x1024
   scene_model: qwen-image-3.0
@@ -40,15 +125,15 @@ matting:
   endpoint: https://api.remove.bg/v1.0/removebg
 ```
 
-配置职责：
+字段职责：
 
-- `text`：OpenAI-compatible `/chat/completions`，用于文本整理和后续在场建议。
-- `image.desk_pet_model`：图像编辑模型，用于根据照片生成好友或自己的桌宠形象。
-- `image.scene_model`：文字生图模型，用于生成无人物场景背景。
-- `image.memory_card_model`：图像生成模型，用于生成留声机记忆卡片。
-- `matting`：remove.bg，用于把生成图片处理成透明 PNG；不配置时仍可生图，但结果可能带背景。
+- `text`：OpenAI-compatible `/chat/completions`，用于文本整理和在场建议。
+- `image.desk_pet_model`：好友照片生成桌宠。
+- `image.scene_model`：生成无人物场景背景。
+- `image.memory_card_model`：生成留声机记忆卡片。
+- `matting`：可选的 remove.bg 后处理，用于去背景。
 
-三个服务相互独立，不要把文本模型 Key 当作图像 Key 使用。
+三个服务彼此独立，不要混用同一把 Key。
 
 ### 2. 安装配置
 
@@ -56,39 +141,27 @@ matting:
 ./scripts/install-api-config.sh .secrets/api.yaml
 ```
 
-脚本会把配置以 `600` 权限安装到：
+脚本会把配置安装到：
 
 ```text
 ~/Library/Application Support/Zaichang/api.yaml
 ~/Library/Containers/com.zhengenrong.zaichang/Data/Library/Application Support/Zaichang/api.yaml
 ```
 
-第二个路径供 Xcode 中启用 App Sandbox 的 macOS App 使用。修改 YAML 后需要重新运行安装脚本并重启 App。
+第二个路径供启用 App Sandbox 的 macOS 运行环境使用。修改 YAML 后需要重新执行安装脚本并重启 App。
 
-如修改了 Bundle Identifier：
+如果 Bundle Identifier 发生变化：
 
 ```bash
 ZAICHANG_BUNDLE_ID=com.example.zaichang \
   ./scripts/install-api-config.sh .secrets/api.yaml
 ```
 
-### 3. 运行验证
+## 运行
 
-在 Xcode 中打开 `在场.xcodeproj`，选择 `在场` Scheme 和 `My Mac`，然后运行。进入“同桌”后选择好友照片，生成流程应依次执行：
+在 Xcode 中打开 `在场.xcodeproj`，选择 `在场` Scheme 和 `My Mac`，然后运行。
 
-```text
-照片 -> DashScope 生成 Q 版桌宠 -> remove.bg 去背景 -> 透明桌宠预览
-```
-
-如果图像服务没有配置，MVP 会退回本地 Mock。远程服务配置错误时，界面会显示失败原因并允许重新生成。
-
-## 安全约束
-
-- 不要把真实 Key 写入 `在场/Config/api.example.yaml`。
-- 不要把含 Key 的 YAML 添加到 Xcode Target 或 Copy Bundle Resources。
-- `.secrets/` 和所有 `api.yaml` 已由 `.gitignore` 忽略。
-- 当前 YAML 适合本地开发，不适合发布给终端用户。正式分发前应由服务端代理第三方 API，并把用户令牌存进 Keychain。
-- iOS/iPadOS 真机不能读取 Mac 的 Application Support 配置。移动端正式接入需要 Keychain、App 内设置或后端签发的短期凭据。
+开发模式下，部分流程可以通过测试注入 Mock 保持演示；主应用会优先读取本机配置并走真实链路。
 
 ## 测试
 
@@ -102,34 +175,12 @@ xcodebuild \
   test
 ```
 
-单元测试不读取真实 API Key，也不会调用外部付费服务。
+单元测试不会读取真实 API Key，也不会调用外部付费服务。
 
-## 本地演示指令
+## 安全约束
 
-先启动本地指令服务：
-
-```bash
-python3 scripts/demo-control-server.py
-```
-
-再在 Xcode Scheme 的 `Run > Arguments > Environment Variables` 中添加：
-
-```text
-ZAICHANG_DEMO_CONTROL_URL = http://127.0.0.1:8765
-```
-
-推进当前倒计时、延时在场建议和拍一拍冷却：
-
-```bash
-curl -X POST http://127.0.0.1:8765/commands/advance-time \
-  -H 'Content-Type: application/json' \
-  -d '{"seconds":300}'
-```
-
-模拟当前同桌拍了拍我：
-
-```bash
-curl -X POST http://127.0.0.1:8765/commands/receive-nudge
-```
-
-服务只监听 `127.0.0.1`；未设置 `ZAICHANG_DEMO_CONTROL_URL` 时，App 不会启动指令轮询。
+- 不要把真实 Key 写入 `在场/Config/api.example.yaml`。
+- 不要把含 Key 的 YAML 添加到 Xcode Target 或 Copy Bundle Resources。
+- `.secrets/` 和所有 `api.yaml` 已由 `.gitignore` 忽略。
+- 当前配置适合本地开发，不适合直接发布给终端用户。
+- iOS / iPadOS 真机不能直接读取 Mac 的 Application Support 配置；正式分发时需要 Keychain、App 内设置或后端签发的短期凭据。

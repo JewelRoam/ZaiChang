@@ -22,3 +22,7 @@ AI操作记录.local.md
 
 # Local Comate specifications and generated workspace files.
 .comate/
+
+# Large archived videos require Git LFS before they can be committed to GitHub.
+docs/archived_pages/ZaiChang_ad_vid.mp4
+docs/archived_pages/ZaiChang_demo_vid.mov

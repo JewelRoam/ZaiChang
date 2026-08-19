@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>桌面搭子 · 效果演示</title>
+<style>
+:root { --breathe: 1.8s; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; color: #22314a;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  background: linear-gradient(160deg, #dfe9f5 0%, #cfd9e8 45%, #b9c6da 100%);
+}
+.wrap { max-width: 940px; margin: 0 auto; padding: 28px 20px 60px; }
+h1 { margin: 0 0 6px; font-size: 22px; }
+.sub { margin: 0 0 4px; color: #55627a; font-size: 13px; line-height: 1.7; }
+.notice {
+  margin: 14px 0 22px; padding: 10px 12px; border-radius: 8px;
+  background: rgba(255,255,255,.72); color: #7a6320; font-size: 12px; line-height: 1.7;
+  border: 1px solid #f0e2b8;
+}
+.stage {
+  position: relative; height: 340px; border-radius: 16px; overflow: hidden;
+  background: linear-gradient(180deg, #6f86ab 0%, #8fa3c0 60%, #a8b8cd 100%);
+  box-shadow: inset 0 2px 20px rgba(0,0,0,.18);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.stage::after {
+  content: "模拟桌面"; position: absolute; left: 12px; top: 10px;
+  color: rgba(255,255,255,.55); font-size: 11px; letter-spacing: .5px;
+}
+.pet-area { position: relative; display: flex; flex-direction: column; align-items: center; padding-bottom: 18px; }
+.bubble {
+  max-width: 240px; margin-bottom: 10px; padding: 9px 13px; border-radius: 14px;
+  background: rgba(255,255,255,.97); font-size: 13px; line-height: 1.5; position: relative;
+  box-shadow: 0 6px 18px rgba(0,0,0,.18); opacity: 0; transition: opacity .18s; word-break: break-word;
+}
+.bubble.show { opacity: 1; }
+.bubble::after {
+  content: ""; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px;
+  margin-left: -6px; background: inherit; transform: rotate(45deg);
+}
+#pet {
+  width: 170px; height: 170px; object-fit: contain; cursor: pointer;
+  transform-origin: 50% 90%;
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,.28));
+  animation: breathe var(--breathe) ease-in-out infinite;
+  -webkit-user-drag: none; user-select: none;
+}
+.panel { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.card { padding: 14px; border-radius: 12px; background: rgba(255,255,255,.82); }
+.card h3 { margin: 0 0 10px; font-size: 13px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button {
+  font-family: inherit; font-size: 12px; padding: 6px 12px; cursor: pointer;
+  border: 1px solid #cfd8e6; border-radius: 999px; background: #fff; color: #22314a;
+}
+button.on { background: #4c8dff; border-color: #4c8dff; color: #fff; }
+.desc { margin: 10px 0 0; color: #55627a; font-size: 12px; line-height: 1.7; }
+.bar { flex: 1; height: 8px; border-radius: 4px; background: #e3e9f2; overflow: hidden; min-width: 120px; }
+.bar i { display: block; height: 100%; width: 20%; background: linear-gradient(90deg,#ff9db0,#ff6f8b); transition: width .3s; }
+label.up { display: inline-block; }
+label.up input { display: none; }
+.tag { font-size: 11px; color: #6b7889; }
+.feat { margin-top: 20px; padding: 16px; border-radius: 12px; background: rgba(255,255,255,.82); }
+.feat ul { margin: 8px 0 0; padding-left: 20px; color: #44506a; font-size: 13px; line-height: 2; }
+@keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+@keyframes jump { 0%{transform:translateY(0) scale(1,1)} 20%{transform:translateY(0) scale(1.12,.88)} 55%{transform:translateY(-26px) scale(.94,1.08)} 80%{transform:translateY(0) scale(1.1,.9)} 100%{transform:translateY(0) scale(1,1)} }
+@keyframes sway { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-7deg)} 75%{transform:rotate(7deg)} }
+@keyframes shiver { 0%,100%{transform:translateX(0)} 10%,30%,50%,70%,90%{transform:translateX(-3px) rotate(-1.5deg)} 20%,40%,60%,80%{transform:translateX(3px) rotate(1.5deg)} }
+@keyframes spin { 0%{transform:rotateY(0)} 100%{transform:rotateY(360deg)} }
+@keyframes roll { 0%{transform:rotate(0) translateY(0)} 50%{transform:rotate(180deg) translateY(-10px)} 100%{transform:rotate(360deg) translateY(0)} }
+@keyframes squash { 0%,100%{transform:scale(1,1)} 40%{transform:scale(1.16,.8) translateY(4px)} 70%{transform:scale(.96,1.06)} }
+@keyframes tilt { 0%,100%{transform:rotate(0)} 30%,70%{transform:rotate(-14deg)} }
+@keyframes stretch { 0%,100%{transform:scale(1,1)} 35%{transform:scale(.9,1.16) translateY(-8px)} 70%{transform:scale(1.05,.97)} }
+@keyframes pop { 0%{transform:scale(1)} 45%{transform:scale(1.22)} 75%{transform:scale(.95)} 100%{transform:scale(1)} }
+@keyframes nod { 0%,100%{transform:translateY(0) rotate(0)} 25%,75%{transform:translateY(5px) rotate(4deg)} 50%{transform:translateY(0) rotate(0)} }
+@keyframes wobble { 0%,100%{transform:skewX(0) scale(1,1)} 20%{transform:skewX(-6deg) scale(1.04,.96)} 45%{transform:skewX(5deg) scale(.97,1.03)} 70%{transform:skewX(-3deg) scale(1.02,.98)} }
+.m-jump{animation:jump .6s cubic-bezier(.3,.7,.4,1)}
+.m-hop{animation:jump .4s cubic-bezier(.3,.7,.4,1) 2}
+.m-sway{animation:sway 1.2s ease-in-out}
+.m-shiver{animation:shiver .5s linear}
+.m-spin{animation:spin .7s ease-in-out}
+.m-roll{animation:roll .9s ease-in-out}
+.m-squash{animation:squash .5s ease-out}
+.m-tilt{animation:tilt .9s ease-in-out}
+.m-stretch{animation:stretch 1.1s ease-in-out}
+.m-pop{animation:pop .4s ease-out}
+.m-nod{animation:nod .7s ease-in-out}
+.m-wobble{animation:wobble .8s ease-in-out}
+@media (max-width: 720px) { .panel { grid-template-columns: 1fr; } .stage { height: 300px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>桌面搭子</h1>
+  <p class="sub">一张图 + 一段性格描述，换来一个住在你桌面上、有反应会自己动、还能帮你干活的伙伴。</p>
+  <div class="notice">
+    这是<strong>网页版效果演示</strong>：下面的动作动画和性格语录都直接取自真实产品，但它只是展示。
+    真实产品是 macOS 桌面应用 —— 透明置顶窗口、点击穿透桌面、常驻后台、能打开本地应用，这些浏览器做不到。
+  </div>
+
+  <div class="stage">
+    <div class="pet-area">
+      <div class="bubble" id="bubble"></div>
+      <img id="pet" alt="桌面搭子" />
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="card">
+      <h3>1 · 换个性格，它就是另一个人</h3>
+      <div class="row" id="styleRow"></div>
+      <p class="desc" id="styleDesc"></p>
+    </div>
+    <div class="card">
+      <h3>2 · 换成你自己的形象</h3>
+      <div class="row">
+        <label class="up"><input type="file" id="file" accept="image/*" /><button type="button" onclick="this.parentNode.querySelector('input').click()">选一张图</button></label>
+        <button id="reset">用回默认</button>
+      </div>
+      <p class="desc">图片只在你的浏览器里处理，不会上传。真实产品里还能一键 AI 抠掉背景、AI 重绘成 Q 版。</p>
+    </div>
+    <div class="card">
+      <h3>3 · 它有好感度</h3>
+      <div class="row"><span class="tag">好感度</span><div class="bar"><i id="affBar"></i></div><span class="tag" id="affVal">20</span></div>
+      <p class="desc">点它就会积累好感度（真实产品里每天有上限，防止连点刷满；连着几天不理会慢慢下降）。好感度和精力共同决定它的语气、动作幅度和主动性。</p>
+    </div>
+    <div class="card">
+      <h3>4 · 它能干活</h3>
+      <p class="desc" style="margin-top:0">真实产品里双击就能跟它说话，它会真的执行：<br />
+        「20 分钟后提醒我喝水」→ 到点气泡提醒<br />
+        「打开百度」→ 浏览器直接打开<br />
+        「记一下今天要写周报」→ 进今日备忘录，每天早上主动弹出<br />
+        没做完的事第二天自动带过来。</p>
+    </div>
+  </div>
+
+  <div class="feat">
+    <h3 style="margin:0;font-size:13px">真实产品还有这些</h3>
+    <ul>
+      <li>14 个动作，点击触发 + 不点也会自己动，幅度和频率跟着性格走</li>
+      <li>性格用自然语言写，AI 按描述生成专属语录（写上你的猫叫什么，它真的会提）</li>
+      <li>深夜会犯困：动作变小变慢、呼吸放缓、不主动找你说话</li>
+      <li>不填任何 API Key 也能用：换形象、动作、内置语录、备忘录、提醒都在本地</li>
+    </ul>
+  </div>
+</div>
+<script>
+const DATA = {
+  savage: {
+    name: "毒舌",
+    desc: "「有点毒舌，最爱吐槽我熬夜和摸鱼，知道我爱喝奶茶，我家猫叫饺子」——这些台词是 AI 按这段描述生成的。",
+    motions: ["shiver","wobble","spin","squash","pop"],
+    lines: ["手闲了？活不够多是吧","饺子踩你脸了","随你，头发要掉光","今晚几点睡？","摸鱼瘾真大","奶茶几分糖？","别装忙，我看得见","你的待办在哭","戳我不如戳一下你的待办","随你，我不管","再点我就咬你","deadline 知道你在戳我吗"]
+  },
+  genki: {
+    name: "元气",
+    desc: "元气型：动作幅度大、频率高，语气热情爱鼓励。",
+    motions: ["hop","jump","spin","pop","roll","wobble"],
+    lines: ["在！！随时待命！","今天也要加油鸭","哎呀被发现了！","冲呀！今天肯定顺利","我能量满格哦","你今天已经很努力啦","要不要一起搞点事情","哇你手速好快","耶！又见到你","我超喜欢被你点","喝口水嘛，就一口","我们是最佳搭子"]
+  },
+  cool: {
+    name: "高冷",
+    desc: "高冷型：只做小幅动作，间隔明显更长，话很少。",
+    motions: ["sway","tilt","nod"],
+    lines: ["嗯。","……有事？","说。","我在。","点这么多次，很闲。","别戳。","知道了。","有正事再叫我。","还有别的吗。","去做事。","别拖了。","嗯，听着。"]
+  },
+  gentle: {
+    name: "温柔",
+    desc: "温柔型：动作慢而柔，语气体贴。",
+    motions: ["sway","stretch","nod","tilt"],
+    lines: ["我在呢，别急","累了就歇一会儿吧","记得喝水呀","你今天辛苦了","慢一点也没关系","别对自己太苛刻","深呼吸，会好一点","有我陪着你","抬头看看远处吧","今天也谢谢你努力","别忘了吃东西","早点休息呀"]
+  }
+};
+const DEFAULT_SVG = 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><ellipse cx="100" cy="182" rx="52" ry="10" fill="rgba(0,0,0,0.12)"/><circle cx="100" cy="100" r="72" fill="#8ec5ff"/><circle cx="100" cy="100" r="72" fill="none" stroke="#fff" stroke-width="6"/><circle cx="76" cy="92" r="9" fill="#22314a"/><circle cx="124" cy="92" r="9" fill="#22314a"/><circle cx="79" cy="89" r="3" fill="#fff"/><circle cx="127" cy="89" r="3" fill="#fff"/><path d="M82 122 q18 16 36 0" stroke="#22314a" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="58" cy="112" r="7" fill="#ff9db0" opacity="0.7"/><circle cx="142" cy="112" r="7" fill="#ff9db0" opacity="0.7"/></svg>`);
+
+const pet = document.getElementById('pet');
+const bubble = document.getElementById('bubble');
+const styleRow = document.getElementById('styleRow');
+const styleDesc = document.getElementById('styleDesc');
+const affBar = document.getElementById('affBar');
+const affVal = document.getElementById('affVal');
+let cur = 'savage', lastLine = null, lastMotion = null, aff = 20, bubbleTimer = null, idleTimer = null;
+
+pet.src = DEFAULT_SVG;
+
+Object.keys(DATA).forEach((k) => {
+  const b = document.createElement('button');
+  b.textContent = DATA[k].name;
+  b.onclick = () => setStyle(k);
+  b.dataset.k = k;
+  styleRow.appendChild(b);
+});
+
+function setStyle(k) {
+  cur = k;
+  [...styleRow.children].forEach((b) => b.classList.toggle('on', b.dataset.k === k));
+  styleDesc.textContent = DATA[k].desc;
+  say('（切成了' + DATA[k].name + '，点点我试试）', 2200);
+  scheduleIdle();
+}
+
+function pick(arr, last) {
+  if (arr.length < 2) return arr[0];
+  let v = arr[Math.floor(Math.random() * arr.length)], g = 0;
+  while (v === last && g++ < 5) v = arr[Math.floor(Math.random() * arr.length)];
+  return v;
+}
+
+function say(text, ms) {
+  bubble.textContent = text;
+  bubble.classList.add('show');
+  if (bubbleTimer) clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(() => bubble.classList.remove('show'), ms || 3000);
+}
+
+function playMotion() {
+  const m = pick(DATA[cur].motions, lastMotion);
+  lastMotion = m;
+  pet.className = '';
+  void pet.offsetWidth;
+  pet.classList.add('m-' + m);
+  setTimeout(() => { pet.className = ''; }, 1300);
+}
+
+pet.addEventListener('click', () => {
+  const line = pick(DATA[cur].lines, lastLine);
+  lastLine = line;
+  say(line);
+  playMotion();
+  aff = Math.min(100, aff + 1);
+  affBar.style.width = aff + '%';
+  affVal.textContent = aff;
+  scheduleIdle();
+});
+
+function scheduleIdle() {
+  if (idleTimer) clearTimeout(idleTimer);
+  const base = cur === 'genki' ? 5000 : cur === 'cool' ? 14000 : 8000;
+  idleTimer = setTimeout(() => { playMotion(); scheduleIdle(); }, base + Math.random() * base);
+}
+
+document.getElementById('file').addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { pet.src = r.result; say('换好啦，点我试试', 2600); };
+  r.readAsDataURL(f);
+});
+document.getElementById('reset').addEventListener('click', () => { pet.src = DEFAULT_SVG; });
+
+setStyle('savage');
+setTimeout(() => say('点我一下试试', 3000), 700);
+</script>
+</body>
+</html>

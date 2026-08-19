@@ -1,0 +1,20 @@
+appId: com.guoziying.desktopbuddy
+productName: 桌面搭子
+directories:
+  buildResources: build
+  output: release
+files:
+  - out/**/*
+  - resources/**/*
+  - package.json
+asarUnpack:
+  - node_modules/sharp/**
+  - node_modules/@img/**
+mac:
+  target: dmg
+  category: public.app-category.utilities
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  identity: null
+  extendInfo:
+    LSUIElement: true

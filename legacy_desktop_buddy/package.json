@@ -1,0 +1,33 @@
+{
+  "name": "desktop-buddy",
+  "version": "0.1.0",
+  "description": "桌面搭子 MVP",
+  "main": "./out/main/index.js",
+  "author": "guoziying",
+  "private": true,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "dist": "npm run build && electron-builder --mac --dir",
+    "dist:dmg": "npm run build && electron-builder --mac"
+  },
+  "dependencies": {
+    "electron-store": "8.2.0",
+    "sharp": "0.33.5",
+    "zustand": "4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.7.5",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.0",
+    "@vitejs/plugin-react": "4.3.2",
+    "electron": "32.2.0",
+    "electron-builder": "25.1.8",
+    "electron-vite": "2.3.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "typescript": "5.6.3",
+    "vite": "5.4.9"
+  }
+}

@@ -66,76 +66,16 @@
 | 留声机 | 录一段语音并设置送达时机，让声音成为可等待的物件。 |
 | 回忆 | 把留声卡片和后续语音整理成统一的共同记忆。 |
 
-## 本地 API 配置
+## API 配置与设置
 
-仓库不包含可用 API Key。AI 能力通过本机 `api.yaml` 配置。
+仓库不包含可用 API Key。运行 App 后，打开「设置 → API 设置」填写文本模型、图像模型和可选抠图服务即可。
 
-### 1. 创建私有配置
+配置会保存到本机 Application Support 下的 `api.yaml`，主应用会读取最新配置。字段含义以设置页为准；如果不确定，直接查看 `SettingsSheet.swift` 和 `APIConfiguration.swift`。
 
-在项目根目录执行：
-
-```bash
-mkdir -p .secrets
-cp 在场/Config/api.example.yaml .secrets/api.yaml
-```
-
-编辑 `.secrets/api.yaml`：
-
-```yaml
-text:
-  provider: openai
-  api_key: "YOUR_TEXT_API_KEY"
-  base_url: https://your-openai-compatible-service.example/v1
-  model: your-text-model
-
-image:
-  provider: dashscope
-  api_key: "YOUR_DASHSCOPE_API_KEY"
-  base_url: ""
-  endpoint: https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation
-  desk_pet_model: qwen-image-edit-plus
-  desk_pet_size: 1024x1024
-  scene_model: qwen-image-3.0
-  scene_size: 1664x928
-  memory_card_model: qwen-image-3.0
-  memory_card_size: 1024x1024
-
-matting:
-  provider: removebg
-  api_key: "YOUR_REMOVE_BG_API_KEY"
-  endpoint: https://api.remove.bg/v1.0/removebg
-```
-
-字段职责：
-
-- `text`：OpenAI-compatible `/chat/completions`，用于文本整理和在场建议。
-- `image.desk_pet_model`：好友照片生成桌宠。
-- `image.scene_model`：生成无人物场景背景。
-- `image.memory_card_model`：生成留声机记忆卡片。
-- `matting`：可选的 remove.bg 后处理，用于去背景。
-
-三个服务彼此独立，不要混用同一把 Key。
-
-### 2. 安装配置
+如果需要提前灌入一份配置，可以复制 `在场/Config/api.example.yaml`，填好后执行：
 
 ```bash
-./scripts/install-api-config.sh .secrets/api.yaml
-```
-
-脚本会把配置安装到：
-
-```text
-~/Library/Application Support/Zaichang/api.yaml
-~/Library/Containers/com.zhengenrong.zaichang/Data/Library/Application Support/Zaichang/api.yaml
-```
-
-第二个路径供启用 App Sandbox 的 macOS 运行环境使用。修改 YAML 后需要重新执行安装脚本并重启 App。
-
-如果 Bundle Identifier 发生变化：
-
-```bash
-ZAICHANG_BUNDLE_ID=com.example.zaichang \
-  ./scripts/install-api-config.sh .secrets/api.yaml
+./scripts/install-api-config.sh /path/to/api.yaml
 ```
 
 ## 运行

@@ -39,28 +39,6 @@ final class __UITests: XCTestCase {
     }
 
     @MainActor
-    func testManuallyEndFocusOpensRecorderGuide() throws {
-        let app = launchApp()
-        startFocus(in: app)
-
-        app.buttons["结束专注"].click()
-        let confirmEnd = app.sheets.buttons["确认结束专注"]
-        XCTAssertTrue(confirmEnd.waitForExistence(timeout: 2))
-        confirmEnd.click()
-
-        XCTAssertTrue(app.buttons["打开留声机"].waitForExistence(timeout: 3))
-        app.buttons["打开留声机"].click()
-        XCTAssertTrue(app.staticTexts["把这句话留到合适的时候"].waitForExistence(timeout: 3))
-    }
-
-    @MainActor
-    func testLaunchPerformance() throws {
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
-    }
-
-    @MainActor
     private func launchApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launch()

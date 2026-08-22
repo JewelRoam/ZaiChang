@@ -7,6 +7,15 @@
     <title>在场 · 看不见彼此的时光，我也在陪着你</title>
     <link rel="icon" href="./assets/logo.jpg" type="image/jpeg" />
     <link rel="apple-touch-icon" href="./assets/logo.jpg" />
+    <script>
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      if (!window.location.hash) {
+        const resetScroll = () => window.scrollTo(0, 0);
+        resetScroll();
+        window.addEventListener('pageshow', resetScroll, { once: true });
+        window.addEventListener('load', resetScroll, { once: true });
+      }
+    </script>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>

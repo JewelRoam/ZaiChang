@@ -17,6 +17,7 @@
 }
 
 * { box-sizing: border-box; }
+html, body { overflow-anchor: none; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0;

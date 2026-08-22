@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="在场：一个把专注、同桌、留声和回忆收进同一间安静小屋的陪伴空间。" />
+    <title>在场 · 看不见彼此的时光，我也在陪着你</title>
+    <link rel="icon" href="./assets/logo.jpg" type="image/jpeg" />
+    <link rel="apple-touch-icon" href="./assets/logo.jpg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="brand" href="#top" aria-label="返回首页">
+          <span class="brand-mark"><img src="./assets/logo.jpg" alt="在场 Logo" /></span>
+          <span>
+            <strong>在场</strong>
+            <small>ZAICHANG / PRESENCE</small>
+          </span>
+        </a>
+        <nav class="site-nav" aria-label="页面导航">
+          <a href="#why">缘起</a>
+          <a href="#experience">体验</a>
+          <a href="#system">系统</a>
+          <a href="#showcase">展示</a>
+        </nav>
+        <a class="header-link" href="https://github.com/JewelRoam/ZaiChang" target="_blank" rel="noreferrer" aria-label="在 GitHub 查看在场项目">
+          <span class="header-link__full">GitHub</span><span class="header-link__short">GH</span> <span aria-hidden="true">↗</span>
+        </a>
+      </header>
+
+      <main id="top">
+        <section class="hero section-grid">
+          <div class="hero-copy reveal">
+            <p class="eyebrow"><span class="eyebrow-line"></span> A QUIET COMPANION SPACE</p>
+            <h1>看不见彼此的时光，<em>我也在陪着你。</em></h1>
+            <p class="hero-lede">
+              《在场》把专注、同桌、留声和回忆收进一间安静的小屋。它不替你聊天，也不替你生活，只让共同度过的时间有一个可以回来的地方。
+            </p>
+            <a class="scroll-cue" href="#experience">SCROLL TO EXPLORE <span aria-hidden="true">↓</span></a>
+            <dl class="hero-notes">
+              <div><dt>01</dt><dd>Mac / iPhone / iPad</dd></div>
+              <div><dt>02</dt><dd>SwiftUI · SpriteKit</dd></div>
+              <div><dt>03</dt><dd>AI 在后台，人在前台</dd></div>
+            </dl>
+          </div>
+          <div class="hero-art scene-deck reveal delay-1" data-scene-deck>
+            <div class="scene-deck__cards" aria-label="场景切换">
+              <button class="scene-card" type="button" data-scene-card data-scene-index="0" aria-label="切换到专注场景">
+                <img src="./scenes/focus.png" alt="专注场景：雨夜书桌与城市灯火" />
+                <span class="scene-card__label">FOCUS / 专注</span>
+              </button>
+              <button class="scene-card" type="button" data-scene-card data-scene-index="1" aria-label="切换到创作场景">
+                <img src="./scenes/make.png" alt="创作场景：暖灯下的木质工作台" />
+                <span class="scene-card__label">MAKE / 创作</span>
+              </button>
+              <button class="scene-card" type="button" data-scene-card data-scene-index="2" aria-label="切换到行动场景">
+                <img src="./scenes/move.png" alt="行动场景：明亮的山景练习室" />
+                <span class="scene-card__label">MOVE / 行动</span>
+              </button>
+              <button class="scene-card" type="button" data-scene-card data-scene-index="3" aria-label="切换到出走场景">
+                <img src="./scenes/roam.png" alt="出走场景：森林车站与远山" />
+                <span class="scene-card__label">ROAM / 出走</span>
+              </button>
+              <button class="scene-card" type="button" data-scene-card data-scene-index="4" aria-label="切换到列车场景">
+                <img src="./scenes/train.png" alt="列车场景：雪夜车厢里的书桌" />
+                <span class="scene-card__label">TRAIN / 旅途</span>
+              </button>
+            </div>
+            <button class="scene-shuffle" type="button" data-scene-shuffle aria-label="随机切换场景">
+              SHUFFLE <span aria-hidden="true">↻</span>
+            </button>
+            <div class="lamp-glow" aria-hidden="true"></div>
+            <div class="hero-stamp" data-scene-stamp>PRESENCE<br /><span>01 / 05</span></div>
+          </div>
+        </section>
+
+        <section class="manifesto section-grid" id="why">
+          <div class="section-label reveal"><span>01</span><span>缘起 / ORIGIN</span></div>
+          <div class="manifesto-copy reveal delay-1">
+            <p class="section-kicker">不是另一个聊天工具</p>
+            <h2>陪伴不一定要说话，<br /><em>但可以有一个在场的证据。</em></h2>
+            <p>
+              我们常常和重要的人相隔很远：各自上课、工作、读书，偶尔想起对方，却不想把每一次想念都变成即时回复的压力。《在场》从这个缝隙里开始，把“我还在”变成一盏灯、一段声音、一张可以留存的卡片。
+            </p>
+            <div class="quote-mark" aria-hidden="true">“</div>
+          </div>
+        </section>
+
+        <section class="experience" id="experience">
+          <div class="section-heading reveal">
+            <div>
+              <p class="section-kicker">02 / EXPERIENCE</p>
+              <h2>四个入口，一间小屋</h2>
+            </div>
+            <p>从今天要做的事开始，在一段时间里和另一个人同频，最后把值得记住的部分交给回忆。</p>
+          </div>
+          <div class="feature-grid">
+            <article class="feature-card feature-card-large reveal">
+              <div class="card-topline"><span>01</span><span>SCENE</span></div>
+              <div class="feature-visual scene-visual">
+                <img src="./scenes/focus.png" alt="温暖的像素书桌场景" />
+                <span class="visual-chip">FOCUS</span>
+              </div>
+              <h3>像素小屋</h3>
+              <p>一处常驻桌面的空间。场景、光线、环境声和桌宠分开生长，给每一段活动一个安静的背景。</p>
+            </article>
+            <article class="feature-card reveal delay-1">
+              <div class="card-topline"><span>02</span><span>STATUS</span></div>
+              <div class="feature-icon"><span>◌</span></div>
+              <div class="feature-signal" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+              <h3>在场</h3>
+              <p>专注、创作、行动或出走。选择一个节奏，让 AI 只在合适的时机给出轻量、可关闭的建议。</p>
+            </article>
+            <article class="feature-card reveal delay-2">
+              <div class="card-topline"><span>03</span><span>TOGETHER</span></div>
+              <div class="feature-icon feature-icon-amber"><span>⌂</span></div>
+              <div class="feature-signal feature-signal-amber" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+              <h3>同桌</h3>
+              <p>通过邀请码进入同一间房间，各自学习或工作，不需要持续聊天，也能知道对方还在。</p>
+            </article>
+            <article class="feature-card feature-card-wide reveal">
+              <div class="card-topline"><span>04</span><span>PHONOGRAPH</span></div>
+              <div class="feature-wide-body">
+                <div class="record-illustration" aria-hidden="true"><span></span></div>
+                <div>
+                  <h3>留声机</h3>
+                  <p>把一段文字或声音留给未来。用户确认之后，它才会在约定的时机亮起，成为一件可以等待的物件。</p>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="system section-grid" id="system">
+          <div class="section-label reveal"><span>03</span><span>系统 / SYSTEM</span></div>
+          <div class="system-content">
+            <div class="section-heading reveal">
+              <div>
+                <p class="section-kicker">PRODUCT LOGIC</p>
+                <h2>AI 在后台，<br /><em>人在前台。</em></h2>
+              </div>
+              <p>把复杂的事情藏到系统里，把决定权留给使用它的人。</p>
+            </div>
+            <div class="system-flow reveal delay-1">
+              <div class="flow-step"><span>01</span><strong>选择状态</strong><small>今日要做的事</small></div>
+              <i aria-hidden="true">→</i>
+              <div class="flow-step"><span>02</span><strong>进入场景</strong><small>背景 / 声音 / 桌宠</small></div>
+              <i aria-hidden="true">→</i>
+              <div class="flow-step"><span>03</span><strong>共同活动</strong><small>同桌 / 独处 / 专注</small></div>
+              <i aria-hidden="true">→</i>
+              <div class="flow-step"><span>04</span><strong>留下声音</strong><small>确认后进入回忆</small></div>
+            </div>
+            <div class="architecture-grid reveal delay-2">
+              <article><span>SwiftUI + SpriteKit</span><p>桌面窗口、像素场景与跨设备的界面层。</p></article>
+              <article><span>AVFoundation</span><p>录音、试听与留声机的本地声音体验。</p></article>
+              <article><span>Application Support</span><p>在本地保存设置、场景和可替换的资源。</p></article>
+              <article><span>Human in the loop</span><p>AI 负责整理和建议，发送与保存始终由人确认。</p></article>
+            </div>
+          </div>
+        </section>
+
+        <section class="showcase" id="showcase">
+          <div class="section-heading reveal">
+            <div>
+              <p class="section-kicker">04 / SHOWCASE</p>
+              <h2>一些已经亮起的灯</h2>
+            </div>
+            <p>从真实的应用场景里，慢慢长出自己的质感。</p>
+          </div>
+          <div class="showcase-grid">
+            <figure class="showcase-main reveal">
+              <img src="./scenes/make.png" alt="创作状态的像素场景" />
+              <figcaption><span>SCENE 02</span> 创作时，把桌面交给正在发生的事。</figcaption>
+            </figure>
+            <div class="memory-stack reveal delay-1">
+              <figure><img src="./assets/memory/focus_hour.png" alt="专注时刻记忆卡片" /><figcaption>FOCUS HOUR</figcaption></figure>
+              <figure><img src="./assets/memory/after_work.png" alt="结束工作后的记忆卡片" /><figcaption>AFTER WORK</figcaption></figure>
+              <figure><img src="./assets/memory/rainy_desk.png" alt="雨天书桌记忆卡片" /><figcaption>RAINY DESK</figcaption></figure>
+            </div>
+          </div>
+          <div class="video-panel reveal">
+            <div class="video-copy">
+              <p class="section-kicker">DEMO REEL</p>
+              <h3>让它动起来</h3>
+              <p>一段关于像素小屋、桌宠和同频在场的演示。</p>
+              <button class="button button-primary video-toggle" type="button" data-video-toggle>播放 / 暂停 <span aria-hidden="true">▶</span></button>
+            </div>
+            <video preload="metadata" playsinline poster="./assets/cover.png" data-demo-video>
+              <source src="./assets/ZaiChang_ad_vid.mp4" type="video/mp4" />
+              <source src="../archived_pages/ZaiChang_ad_vid.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </section>
+
+        <section class="closing section-grid reveal">
+          <div class="section-label"><span>END</span><span>STAY PRESENT</span></div>
+          <div>
+            <h2>不制造依赖，<br /><em>只为重要的关系留一盏灯。</em></h2>
+            <p>《在场》仍在生长中。每一个场景、每一张卡片和每一次等待，都是一次对“共同生活”更温柔的尝试。</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <span>在场 / ZAICHANG</span>
+        <span>看不见彼此的时光，我也在陪着你。</span>
+        <span id="year"></span>
+      </footer>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>
